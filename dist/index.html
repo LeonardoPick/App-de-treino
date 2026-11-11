@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Workout — Hipertrofia & Nuvem</title>
+  <meta name="description" content="Aplicativo multiplataforma (Web e Mobile PWA) de treino focado em hipertrofia, sobrecarga progressiva e sincronização na nuvem via Supabase.">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Workout">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script>window.__ENV__ = { VITE_SUPABASE_URL: "", VITE_SUPABASE_ANON_KEY: "" };</script>
+</head>
+<body class="apple-body">
+
+  <!-- Barra Superior Minimalista (Apple Frosted Glass) -->
+  <header class="apple-navbar">
+    <div class="apple-navbar-inner">
+      <button type="button" id="btn-logo-home" class="apple-brand">
+        <span id="cloud-status-dot" class="apple-brand-dot"></span>
+        <span class="apple-brand-title">Workout</span>
+      </button>
+
+      <!-- Navegação Central Segmented (Desktop / Tablet) -->
+      <nav class="apple-segmented-desktop">
+        <button type="button" data-nav-target="dashboard" class="apple-seg-btn active">Hoje</button>
+        <button type="button" data-nav-target="workout" class="apple-seg-btn">Treinar</button>
+        <button type="button" data-nav-target="routines" class="apple-seg-btn">Rotinas</button>
+        <button type="button" data-nav-target="history" class="apple-seg-btn">Histórico</button>
+      </nav>
+
+      <!-- Ações Direita (Status Nuvem + Conta Supabase) -->
+      <div class="apple-navbar-actions">
+        <button type="button" id="btn-streak-history" class="apple-pill-subtle" title="Treinos salvos">
+          <span class="apple-status-dot"></span>
+          <span id="header-workout-count">0</span>
+          <span class="hide-on-xs">treinos</span>
+        </button>
+
+        <button type="button" id="btn-mobile-guide" class="apple-pill-subtle" title="Autenticação Supabase & Nuvem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+          <span id="header-auth-label">Nuvem</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main id="app-main-content" class="apple-main-container">
+    <!-- Renderizado dinamicamente via JS -->
+  </main>
+
+  <!-- Tab Bar Inferior Estilo iOS (Mobile First) -->
+  <nav class="apple-tabbar">
+    <button type="button" data-nav-target="dashboard" class="apple-tab-item active">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+      <span>Hoje</span>
+    </button>
+
+    <button type="button" data-nav-target="workout" class="apple-tab-item">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M6 7v10"/><path d="M18 7v10"/><path d="M4 9v6"/><path d="M20 9v6"/></svg>
+      <span>Treinar</span>
+    </button>
+
+    <button type="button" data-nav-target="routines" class="apple-tab-item">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+      <span>Rotinas</span>
+    </button>
+
+    <button type="button" data-nav-target="history" class="apple-tab-item">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+      <span>Histórico</span>
+    </button>
+  </nav>
+
+  <!-- Sheet Modal: Autenticação Supabase (E-mail e Senha) + Configuração Cloud -->
+  <div id="mobile-guide-modal" class="apple-modal-backdrop hidden">
+    <div class="apple-sheet max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div>
+          <h3 class="text-base font-semibold text-white">Sincronização na Nuvem (Supabase)</h3>
+          <p class="text-xs text-zinc-400">Acesse seus treinos no PC e no Celular com fallback offline</p>
+        </div>
+        <button type="button" id="btn-close-mobile-guide" class="apple-close-btn">✕</button>
+      </div>
+
+      <div class="space-y-4 py-4 text-xs text-zinc-300">
+        
+        <!-- Painel de Login / Conta Autenticada -->
+        <div id="supabase-auth-section" class="apple-grouped-box p-4 space-y-3">
+          <!-- Preenchido dinamicamente pelo app.js -->
+        </div>
+
+        <!-- Painel de Credenciais do Projeto Supabase (Caso não venha de env vars da Vercel) -->
+        <details class="apple-grouped-box p-4">
+          <summary class="font-semibold text-white cursor-pointer">
+            Configurar URL e Anon Key do Supabase
+          </summary>
+          <div class="space-y-2.5 mt-3">
+            <p class="text-[11px] text-zinc-400">
+              Na Vercel, defina <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code>, ou informe abaixo:
+            </p>
+            <div>
+              <label class="text-[11px] text-zinc-400 block mb-1">Supabase Project URL</label>
+              <input type="url" id="sb-url-input" class="input-dark w-full px-3 py-2 text-xs" placeholder="https://seu-projeto.supabase.co" />
+            </div>
+            <div>
+              <label class="text-[11px] text-zinc-400 block mb-1">Supabase Anon Public Key</label>
+              <input type="password" id="sb-key-input" class="input-dark w-full px-3 py-2 text-xs" placeholder="eyJhbGciOiJIUzI1NiIsInR5..." />
+            </div>
+            <button type="button" id="btn-save-sb-config" class="btn-secondary w-full py-2.5 rounded-xl font-semibold">
+              Salvar Conexão Supabase
+            </button>
+          </div>
+        </details>
+
+        <!-- Resiliência IndexedDB + PWA -->
+        <div class="apple-grouped-box p-4 space-y-2">
+          <div class="font-semibold text-white flex items-center gap-2">
+            <span class="apple-status-dot"></span>
+            <span>Fallback Offline IndexedDB + Wake Lock Ativos</span>
+          </div>
+          <p class="text-zinc-400 leading-relaxed">
+            Se o sinal da academia oscilar, o treino em andamento e o cronômetro rodam direto no cache local (<code>IndexedDB</code>) sem travar e sincronizam automaticamente com as tabelas <code>routines</code> e <code>workout_logs</code> assim que a conexão retornar.
+          </p>
+        </div>
+
+        <!-- Backup Manual -->
+        <div class="apple-grouped-box p-4 space-y-2.5">
+          <h4 class="font-semibold text-white">Exportar / Importar JSON</h4>
+          <div class="flex items-center gap-2">
+            <button type="button" id="modal-btn-export" class="btn-secondary flex-1 py-2.5 rounded-xl font-semibold text-center">
+              Exportar JSON
+            </button>
+            <label class="btn-secondary flex-1 py-2.5 rounded-xl font-semibold text-center cursor-pointer">
+              Importar JSON
+              <input type="file" id="modal-input-import" accept=".json" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
