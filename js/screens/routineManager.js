@@ -16,6 +16,8 @@ import {
   SET_TYPE_SHORT_LABELS,
   DEFAULT_SET_REST_SECONDS,
   DEFAULT_SET_TARGET_REPS,
+  DEFAULT_CLUSTER_BLOCKS,
+  formatClusterBreakdown,
   sortSetsByCategory
 } from '../models.js';
 
@@ -607,30 +609,63 @@ export class RoutineManagerScreen {
     const badgeClass = `badge-${set.type}`;
     const label = SET_TYPE_LABELS[set.type];
     const restVal = set.restTimeSeconds || DEFAULT_SET_REST_SECONDS[set.type] || 90;
+    const isCluster = set.type === 'cluster';
+    const isBackoff = set.type === 'backoff';
+    const blocksVal = set.clusterBlocks || DEFAULT_CLUSTER_BLOCKS;
+    const totalRepsVal = set.targetReps || DEFAULT_SET_TARGET_REPS[set.type] || 8;
 
     return `
       <div class="flex items-center justify-between flex-wrap gap-2 p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 text-xs">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <span class="text-zinc-500 font-mono text-[11px] w-4">${sIndex + 1}.</span>
           <span class="${badgeClass} text-[11px] px-2.5 py-0.5 rounded-full font-semibold">
             ${label}
           </span>
+          ${isBackoff ? `
+            <span class="text-[10px] text-rose-300/90 bg-rose-500/10 px-2 py-0.5 rounded-full">
+              −30% da Top Set
+            </span>
+          ` : ''}
+          ${isCluster ? `
+            <span 
+              class="text-[10px] text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full font-medium"
+              data-cluster-preview="${exIndex}-${sIndex}"
+            >
+              ${formatClusterBreakdown(totalRepsVal, blocksVal)}
+            </span>
+          ` : ''}
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
           <!-- Repetições Alvo -->
           <div class="flex items-center gap-1">
-            <span class="text-zinc-400 text-[11px]">Reps:</span>
+            <span class="text-zinc-400 text-[11px]">${isCluster ? 'Total Reps:' : 'Reps:'}</span>
             <input 
               type="number" 
               class="input-dark w-14 px-1.5 py-1 text-center font-semibold set-reps-input" 
-              value="${set.targetReps || 8}" 
+              value="${totalRepsVal}" 
               min="1" 
               max="100" 
               data-ex-idx="${exIndex}" 
               data-set-idx="${sIndex}"
             />
           </div>
+
+          ${isCluster ? `
+            <!-- Divisão em Blocos (Cluster Set) -->
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-400 text-[11px]">Blocos:</span>
+              <input 
+                type="number" 
+                class="input-dark w-12 px-1.5 py-1 text-center font-semibold text-teal-300 set-cluster-blocks-input" 
+                value="${blocksVal}" 
+                min="1" 
+                max="12" 
+                data-ex-idx="${exIndex}" 
+                data-set-idx="${sIndex}"
+              />
+            </div>
+          ` : ''}
 
           <!-- Tempo de Descanso Específico desta Série -->
           <div class="flex items-center gap-1">
@@ -639,7 +674,7 @@ export class RoutineManagerScreen {
               type="number" 
               class="input-dark w-16 px-1.5 py-1 text-center font-semibold text-purple-400 set-rest-input" 
               value="${restVal}" 
-              min="10" 
+              min="5" 
               max="600" 
               step="5"
               data-ex-idx="${exIndex}" 
@@ -831,6 +866,7 @@ export class RoutineManagerScreen {
             id: generateId('s'),
             type,
             targetReps: DEFAULT_SET_TARGET_REPS[type] || 10,
+            ...(type === 'cluster' ? { clusterBlocks: DEFAULT_CLUSTER_BLOCKS } : {}),
             unit: existingUnit,
             restTimeSeconds: categoryRest,
             completed: false
@@ -903,6 +939,23 @@ export class RoutineManagerScreen {
         const sIdx = parseInt(rInput.getAttribute('data-set-idx'), 10);
         if (ex.sets[sIdx]) {
           ex.sets[sIdx].targetReps = parseInt(rInput.value, 10) || 8;
+        }
+      });
+
+      card.querySelectorAll('.set-cluster-blocks-input').forEach(bInput => {
+        const sIdx = parseInt(bInput.getAttribute('data-set-idx'), 10);
+        if (ex.sets[sIdx]) {
+          ex.sets[sIdx].clusterBlocks = Math.max(1, parseInt(bInput.value, 10) || DEFAULT_CLUSTER_BLOCKS);
+        }
+      });
+
+      // Atualiza preview ao vivo do Cluster Set se existir
+      ex.sets.forEach((s, sIdx) => {
+        if (s.type === 'cluster') {
+          const preview = card.querySelector(`[data-cluster-preview="${exIdx}-${sIdx}"]`);
+          if (preview) {
+            preview.textContent = formatClusterBreakdown(s.targetReps, s.clusterBlocks);
+          }
         }
       });
 

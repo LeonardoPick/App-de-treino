@@ -603,6 +603,9 @@ class StorageService {
         if (!s.restTimeSeconds || isNaN(s.restTimeSeconds)) {
           s.restTimeSeconds = DEFAULT_SET_REST_SECONDS[s.type] || ex.restTimeSeconds || 90;
         }
+        if (s.type === 'cluster' && (!s.clusterBlocks || isNaN(s.clusterBlocks))) {
+          s.clusterBlocks = 3;
+        }
       });
     });
     return routine;

@@ -15,6 +15,10 @@ import {
   SET_TYPE_LABELS,
   DEFAULT_SET_REST_SECONDS,
   DEFAULT_SET_TARGET_REPS,
+  DEFAULT_CLUSTER_BLOCKS,
+  getClusterBlockReps,
+  formatClusterBreakdown,
+  calculateBackoffWeight,
   isTechniqueSetType,
   sortSetsByCategory,
   generateId
@@ -75,6 +79,10 @@ export class LiveWorkoutScreen {
           id: s.id || generateId('s'),
           type: s.type,
           targetReps: s.targetReps || DEFAULT_SET_TARGET_REPS[s.type] || 8,
+          ...(s.type === 'cluster' ? {
+            clusterBlocks: s.clusterBlocks || DEFAULT_CLUSTER_BLOCKS,
+            clusterCompletedBlocks: 0
+          } : {}),
           weightOrPlates: '',
           actualReps: s.targetReps || DEFAULT_SET_TARGET_REPS[s.type] || 8,
           unit: s.unit || 'kg',
@@ -337,9 +345,81 @@ export class LiveWorkoutScreen {
     }
 
     if (isActive) {
+      let backoffHintHtml = '';
+      let autoBackoffWeight = '';
+
+      if (set.type === 'backoff') {
+        const refSet = [...exercise.sets].reverse().find(s => s.type === 'top' && s.weightOrPlates !== '' && parseFloat(s.weightOrPlates) > 0)
+          || [...exercise.sets].reverse().find(s => s.type === 'work' && s.weightOrPlates !== '' && parseFloat(s.weightOrPlates) > 0);
+        if (refSet) {
+          const refWeight = parseFloat(refSet.weightOrPlates);
+          const reduced = calculateBackoffWeight(refWeight, set.unit);
+          if (reduced !== null) {
+            autoBackoffWeight = reduced;
+            backoffHintHtml = `
+              <div class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/25 text-[11px] text-rose-300 flex items-center justify-between gap-2">
+                <span>Redução automática de <strong>−30%</strong> da ${SET_TYPE_LABELS[refSet.type]} (${refWeight} ${refSet.unit})</span>
+                <strong class="text-white">${reduced} ${set.unit}</strong>
+              </div>
+            `;
+          }
+        } else {
+          backoffHintHtml = `
+            <div class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/25 text-[11px] text-rose-300/90">
+              Back Off Set: reduz automaticamente <strong>30%</strong> da carga assim que a Top Set for preenchida.
+            </div>
+          `;
+        }
+      }
+
+      let clusterPanelHtml = '';
+      if (set.type === 'cluster') {
+        const totalClusterReps = set.targetReps || DEFAULT_SET_TARGET_REPS.cluster;
+        const clusterBlocks = set.clusterBlocks || DEFAULT_CLUSTER_BLOCKS;
+        const blockRepsArr = getClusterBlockReps(totalClusterReps, clusterBlocks);
+        const completedBlocks = set.clusterCompletedBlocks || 0;
+
+        clusterPanelHtml = `
+          <div class="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/25 space-y-2.5">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span class="text-xs font-semibold text-teal-300">
+                  Cluster Set • ${formatClusterBreakdown(totalClusterReps, clusterBlocks)}
+                </span>
+                <p class="text-[11px] text-zinc-400">Total: ${totalClusterReps} reps em ${blockRepsArr.length} blocos (${setRest}s entre blocos)</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-[11px]">
+                <span class="text-zinc-400">Blocos:</span>
+                <button type="button" id="btn-cluster-blocks-minus" class="btn-secondary px-2 py-0.5 rounded-lg text-white font-bold">−</button>
+                <span class="font-bold text-teal-300 w-4 text-center">${clusterBlocks}</span>
+                <button type="button" id="btn-cluster-blocks-plus" class="btn-secondary px-2 py-0.5 rounded-lg text-white font-bold">+</button>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              ${blockRepsArr.map((reps, bIdx) => {
+                const isDone = bIdx < completedBlocks;
+                return `
+                  <button
+                    type="button"
+                    data-cluster-block="${bIdx}"
+                    class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold border transition ${
+                      isDone
+                        ? 'bg-teal-500/25 border-teal-400 text-teal-200'
+                        : 'bg-zinc-900/80 border-zinc-700 text-zinc-200 hover:border-teal-400/60'
+                    }"
+                  >
+                    ${isDone ? '✓ ' : ''}Bloco ${bIdx + 1}: ${reps} reps
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
       const suggestedWeight = set.weightOrPlates !== '' 
         ? set.weightOrPlates 
-        : (benchmarks.last ? benchmarks.last.weight : '');
+        : (autoBackoffWeight !== '' ? autoBackoffWeight : (benchmarks.last ? benchmarks.last.weight : ''));
 
       return `
         <div class="apple-card p-5 space-y-4 border border-zinc-700">
@@ -361,6 +441,9 @@ export class LiveWorkoutScreen {
               Retirar série
             </button>
           </div>
+
+          ${backoffHintHtml}
+          ${clusterPanelHtml}
 
           <!-- Benchmarks Históricos Minimalistas -->
           <div class="apple-grouped-box p-3.5 grid grid-cols-2 gap-3 text-xs">
@@ -564,6 +647,10 @@ export class LiveWorkoutScreen {
           id: generateId('s'),
           type,
           targetReps: DEFAULT_SET_TARGET_REPS[type] || 8,
+          ...(type === 'cluster' ? {
+            clusterBlocks: DEFAULT_CLUSTER_BLOCKS,
+            clusterCompletedBlocks: 0
+          } : {}),
           weightOrPlates: '',
           actualReps: DEFAULT_SET_TARGET_REPS[type] || 8,
           unit: defaultUnit,
@@ -649,6 +736,12 @@ export class LiveWorkoutScreen {
         val = Math.max(1, val - 1);
         repsInput.value = val;
         activeSet.actualReps = val;
+        if (activeSet.type === 'cluster') {
+          activeSet.targetReps = val;
+          this.saveState();
+          this.render(container);
+          return;
+        }
         this.saveState();
       });
       container.querySelector('#btn-reps-plus')?.addEventListener('click', () => {
@@ -656,7 +749,47 @@ export class LiveWorkoutScreen {
         val = val + 1;
         repsInput.value = val;
         activeSet.actualReps = val;
+        if (activeSet.type === 'cluster') {
+          activeSet.targetReps = val;
+          this.saveState();
+          this.render(container);
+          return;
+        }
         this.saveState();
+      });
+
+      // Controles interativos do Cluster Set (divisão de blocos + pausa curta entre blocos)
+      container.querySelector('#btn-cluster-blocks-minus')?.addEventListener('click', () => {
+        const current = activeSet.clusterBlocks || DEFAULT_CLUSTER_BLOCKS;
+        activeSet.clusterBlocks = Math.max(1, current - 1);
+        activeSet.clusterCompletedBlocks = Math.min(activeSet.clusterCompletedBlocks || 0, activeSet.clusterBlocks);
+        this.saveState();
+        this.render(container);
+      });
+      container.querySelector('#btn-cluster-blocks-plus')?.addEventListener('click', () => {
+        const current = activeSet.clusterBlocks || DEFAULT_CLUSTER_BLOCKS;
+        const maxBlocks = Math.max(1, activeSet.targetReps || DEFAULT_SET_TARGET_REPS.cluster);
+        activeSet.clusterBlocks = Math.min(maxBlocks, current + 1);
+        this.saveState();
+        this.render(container);
+      });
+      container.querySelectorAll('[data-cluster-block]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const bIdx = parseInt(btn.getAttribute('data-cluster-block'), 10);
+          const totalBlocks = activeSet.clusterBlocks || DEFAULT_CLUSTER_BLOCKS;
+          const currentCompleted = activeSet.clusterCompletedBlocks || 0;
+          activeSet.clusterCompletedBlocks = (bIdx + 1 === currentCompleted) ? bIdx : (bIdx + 1);
+
+          // Se ainda faltam blocos, dispara a pausa curta intra-série (ex: 15s)
+          if (activeSet.clusterCompletedBlocks > currentCompleted && activeSet.clusterCompletedBlocks < totalBlocks) {
+            const intraRest = parseInt(restInput?.value, 10) || activeSet.restTimeSeconds || DEFAULT_SET_REST_SECONDS.cluster;
+            audioService.playSetComplete();
+            this.requestWakeLock();
+            timerService.start(intraRest);
+          }
+          this.saveState();
+          this.render(container);
+        });
       });
 
       // Concluir Série e Disparar o Descanso Específico da Série

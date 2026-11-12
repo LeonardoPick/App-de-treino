@@ -68,7 +68,7 @@ export const DEFAULT_SET_TARGET_REPS = {
   top: 8,
   backoff: 10,
   rest_pause: 6,
-  cluster: 4
+  cluster: 12
 };
 
 export const SET_TYPE_DESCRIPTIONS = {
@@ -76,9 +76,9 @@ export const SET_TYPE_DESCRIPTIONS = {
   feeder: 'Reconhecimento de carga sem fadiga',
   work: 'Série principal de hipertrofia',
   top: 'Esforço máximo e quebra de recorde',
-  backoff: 'Redução de carga após a última série',
+  backoff: 'Redução de 30% da carga da Top Set após a última série',
   rest_pause: 'Pausa curta após a série principal até a falha',
-  cluster: 'Mini-séries com pausas curtas intra-série'
+  cluster: 'Série dividida em blocos com pausas curtas intra-série'
 };
 
 export const SET_TYPE_COLORS = {
@@ -127,6 +127,47 @@ export function sortSetsByCategory(sets) {
     cluster: 7
   };
   return [...sets].sort((a, b) => (rank[a.type] || 9) - (rank[b.type] || 9));
+}
+
+export const DEFAULT_CLUSTER_BLOCKS = 3;
+
+/**
+ * Divide o total de repetições de um Cluster Set em blocos iguais (ou quase iguais)
+ * Ex: 12 reps, 3 blocos -> [4, 4, 4]; 10 reps, 3 blocos -> [4, 3, 3]
+ */
+export function getClusterBlockReps(totalReps, blocks = DEFAULT_CLUSTER_BLOCKS) {
+  const safeReps = Math.max(1, parseInt(totalReps, 10) || DEFAULT_SET_TARGET_REPS.cluster);
+  const safeBlocks = Math.max(1, Math.min(safeReps, parseInt(blocks, 10) || DEFAULT_CLUSTER_BLOCKS));
+  const base = Math.floor(safeReps / safeBlocks);
+  const rem = safeReps % safeBlocks;
+
+  return Array.from({ length: safeBlocks }, (_, idx) => base + (idx < rem ? 1 : 0));
+}
+
+/**
+ * Formata a divisão do Cluster Set para exibição
+ * Ex: "3×4 reps" ou "4+3+3 reps"
+ */
+export function formatClusterBreakdown(totalReps, blocks = DEFAULT_CLUSTER_BLOCKS) {
+  const arr = getClusterBlockReps(totalReps, blocks);
+  const allEqual = arr.every(v => v === arr[0]);
+  if (allEqual) {
+    return `${arr.length}×${arr[0]} reps`;
+  }
+  return `${arr.join('+')} reps`;
+}
+
+/**
+ * Calcula a carga sugerida para Back Off Set (redução de 30% sobre a Top Set)
+ */
+export function calculateBackoffWeight(baseWeight, unit = 'kg') {
+  const num = parseFloat(baseWeight);
+  if (isNaN(num) || num <= 0) return null;
+  const reduced = num * 0.7;
+  if (unit === 'placas') {
+    return Math.max(1, Math.round(reduced));
+  }
+  return Math.round(reduced * 2) / 2;
 }
 
 /**
