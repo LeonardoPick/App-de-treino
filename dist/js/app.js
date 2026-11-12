@@ -31,6 +31,9 @@ class App {
 
     window.addEventListener('workout-data-saved', () => {
       this.updateHeaderStats();
+      if (this.currentScreen === 'history' || this.currentScreen === 'dashboard') {
+        this.screens[this.currentScreen]?.render(this.container);
+      }
     });
 
     window.addEventListener('storage-synced', () => {

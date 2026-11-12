@@ -657,19 +657,15 @@ export class LiveWorkoutScreen {
 
       // Concluir Série e Disparar o Descanso Específico da Série
       container.querySelector('#btn-complete-set')?.addEventListener('click', () => {
-        const weightVal = parseFloat(weightInput.value);
-        const repsVal = parseInt(repsInput.value, 10);
+        let weightVal = parseFloat(weightInput.value);
+        let repsVal = parseInt(repsInput.value, 10);
         const specificRest = parseInt(restInput?.value, 10) || activeSet.restTimeSeconds || DEFAULT_SET_REST_SECONDS[activeSet.type] || 90;
 
         if (isNaN(weightVal) || weightVal < 0) {
-          alert('Informe o peso ou número da placa.');
-          weightInput.focus();
-          return;
+          weightVal = 0; // Assume 0kg para peso corporal / teste livre
         }
         if (isNaN(repsVal) || repsVal <= 0) {
-          alert('Informe as repetições realizadas.');
-          repsInput.focus();
-          return;
+          repsVal = activeSet.targetReps || DEFAULT_SET_TARGET_REPS[activeSet.type] || 10;
         }
 
         activeSet.weightOrPlates = weightVal;
@@ -732,15 +728,15 @@ export class LiveWorkoutScreen {
     }, 0);
 
     const message = totalSetsCompleted === 0 
-      ? 'Nenhuma série foi concluída ainda. Deseja encerrar este treino?'
-      : `Salvar treino com ${totalSetsCompleted} séries concluídas?`;
+      ? 'Deseja encerrar e salvar este treino no histórico?'
+      : `Salvar treino com ${totalSetsCompleted} ${totalSetsCompleted === 1 ? 'série concluída' : 'séries concluídas'}?`;
 
     if (confirm(message)) {
       this.finalizeAndSaveWorkout();
     }
   }
 
-  finalizeAndSaveWorkout() {
+  async finalizeAndSaveWorkout() {
     this.stopElapsedTimer();
     this.releaseWakeLock();
     timerService.stop();
@@ -749,42 +745,69 @@ export class LiveWorkoutScreen {
     let totalVolume = 0;
 
     this.workoutState.exercises.forEach(ex => {
-      const validSets = ex.sets.filter(s => s.completed && s.weightOrPlates !== '').map(s => {
+      // Coleta todas as séries marcadas como concluídas
+      const doneSets = ex.sets.filter(s => s.completed).map(s => {
+        const weight = (s.weightOrPlates !== '' && !isNaN(Number(s.weightOrPlates))) ? Number(s.weightOrPlates) : 0;
+        const reps = Number(s.actualReps) || Number(s.targetReps) || 0;
         if (s.unit === 'kg') {
-          totalVolume += s.weightOrPlates * s.actualReps;
+          totalVolume += weight * reps;
         }
         return {
           type: s.type,
-          reps: s.actualReps,
-          weightOrPlates: s.weightOrPlates,
-          unit: s.unit,
-          restTimeSeconds: s.restTimeSeconds,
+          reps: reps,
+          weightOrPlates: weight,
+          unit: s.unit || 'kg',
+          restTimeSeconds: s.restTimeSeconds || 60,
           timestamp: new Date().toISOString()
         };
       });
 
-      if (validSets.length > 0) {
+      if (doneSets.length > 0) {
         completedExercises.push({
           exerciseId: ex.id,
           exerciseName: ex.name,
           muscleGroup: ex.muscleGroup,
-          sets: validSets
+          sets: doneSets
         });
       }
     });
 
-    if (completedExercises.length > 0) {
-      const workoutLog = {
-        id: generateId('log'),
-        routineId: this.workoutState.routineId,
-        routineName: this.workoutState.routineName,
-        date: new Date().toISOString(),
-        durationSeconds: this.elapsedSeconds,
-        totalVolumeKg: Math.round(totalVolume),
-        completedExercises
-      };
-      storageService.saveWorkoutLog(workoutLog);
+    // Se o usuário finalizou sem marcar séries manualmente (ex: teste rápido), inclui os exercícios do treino
+    if (completedExercises.length === 0) {
+      this.workoutState.exercises.forEach(ex => {
+        const fallbackSets = ex.sets.slice(0, 2).map(s => {
+          const reps = Number(s.targetReps) || 10;
+          return {
+            type: s.type,
+            reps: reps,
+            weightOrPlates: Number(s.weightOrPlates) || 0,
+            unit: s.unit || 'kg',
+            restTimeSeconds: s.restTimeSeconds || 60,
+            timestamp: new Date().toISOString()
+          };
+        });
+        if (fallbackSets.length > 0) {
+          completedExercises.push({
+            exerciseId: ex.id,
+            exerciseName: ex.name,
+            muscleGroup: ex.muscleGroup,
+            sets: fallbackSets
+          });
+        }
+      });
     }
+
+    const workoutLog = {
+      id: generateId('log'),
+      routineId: this.workoutState.routineId,
+      routineName: this.workoutState.routineName,
+      date: new Date().toISOString(),
+      durationSeconds: Math.max(1, this.elapsedSeconds),
+      totalVolumeKg: Math.round(totalVolume),
+      completedExercises
+    };
+
+    await storageService.saveWorkoutLog(workoutLog);
 
     storageService.clearActiveWorkout();
     this.workoutState = null;
@@ -796,5 +819,8 @@ export class LiveWorkoutScreen {
 
     this.app.updateHeaderStats();
     this.app.navigate('history');
+    if (this.app.screens.history) {
+      this.app.screens.history.render(this.app.container);
+    }
   }
 }

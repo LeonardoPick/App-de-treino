@@ -200,9 +200,22 @@ const DEFAULT_WORKOUT_LOGS = [
 class StorageService {
   constructor() {
     this.db = null;
+
+    // Carrega backup imediato do localStorage se existir
+    let initialLogs = DEFAULT_WORKOUT_LOGS;
+    try {
+      const savedLogs = localStorage.getItem('workout_logs_cache_v1');
+      if (savedLogs) {
+        const parsed = JSON.parse(savedLogs);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          initialLogs = parsed;
+        }
+      }
+    } catch (e) {}
+
     this.memoryCache = {
       routines: DEFAULT_ROUTINES.map(r => this.normalizeRoutineSets(r)),
-      workoutLogs: DEFAULT_WORKOUT_LOGS,
+      workoutLogs: initialLogs,
       activeWorkout: null
     };
     this.syncStatus = 'offline-cache'; // 'synced' | 'syncing' | 'offline-cache'
@@ -325,8 +338,13 @@ class StorageService {
       await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
     }
 
-    if (Array.isArray(cachedLogs)) {
-      this.memoryCache.workoutLogs = cachedLogs;
+    if (Array.isArray(cachedLogs) && cachedLogs.length > 0) {
+      const mergedMap = new Map();
+      cachedLogs.forEach(l => mergedMap.set(l.id, l));
+      this.memoryCache.workoutLogs.forEach(l => mergedMap.set(l.id, l));
+      this.memoryCache.workoutLogs = Array.from(mergedMap.values()).sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
     } else {
       await this.idbPut(STORE_CACHE, CACHE_KEYS.WORKOUT_LOGS, this.memoryCache.workoutLogs);
     }
@@ -454,7 +472,7 @@ class StorageService {
 
       if (!errLogs && Array.isArray(remoteLogs)) {
         if (remoteLogs.length > 0) {
-          this.memoryCache.workoutLogs = remoteLogs.map(row => ({
+          const mappedRemote = remoteLogs.map(row => ({
             id: row.id,
             routineId: row.routine_id,
             routineName: row.routine_name,
@@ -463,6 +481,18 @@ class StorageService {
             totalVolumeKg: Number(row.total_volume_kg) || 0,
             completedExercises: row.completed_exercises || []
           }));
+
+          const mergedMap = new Map();
+          this.memoryCache.workoutLogs.forEach(l => mergedMap.set(l.id, l));
+          mappedRemote.forEach(l => mergedMap.set(l.id, l));
+          this.memoryCache.workoutLogs = Array.from(mergedMap.values()).sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+
+          try {
+            localStorage.setItem('workout_logs_cache_v1', JSON.stringify(this.memoryCache.workoutLogs));
+          } catch (e) {}
+
           await this.idbPut(STORE_CACHE, CACHE_KEYS.WORKOUT_LOGS, this.memoryCache.workoutLogs);
         }
       }
@@ -543,6 +573,11 @@ class StorageService {
       this.memoryCache.workoutLogs.unshift(log);
     }
 
+    // Backup imediato síncrono em localStorage
+    try {
+      localStorage.setItem('workout_logs_cache_v1', JSON.stringify(this.memoryCache.workoutLogs));
+    } catch (e) {}
+
     await this.idbPut(STORE_CACHE, CACHE_KEYS.WORKOUT_LOGS, this.memoryCache.workoutLogs);
 
     const op = { table: 'workout_logs', action: 'upsert', payload: log };
@@ -552,6 +587,7 @@ class StorageService {
         await this.executeRemoteOperation(op);
         this.setSyncStatus('synced');
       } catch (e) {
+        console.warn('Erro ao subir treino no Supabase (salvo localmente e enfileirado):', e);
         await this.enqueueCloudOperation(op);
         this.setSyncStatus('offline-cache');
       }
