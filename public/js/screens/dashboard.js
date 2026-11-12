@@ -56,18 +56,11 @@ export class DashboardScreen {
                 <button 
                   type="button"
                   data-day-index="${d.dayIndex}"
-                  class="day-pill-btn flex flex-col items-center justify-center py-2.5 rounded-xl transition-all ${
-                    isSelected 
-                      ? 'bg-white text-black font-semibold' 
-                      : 'text-zinc-400 hover:bg-zinc-800'
-                  }"
+                  class="day-pill-btn ${isSelected ? 'active' : ''} ${isToday ? 'is-today' : ''}"
+                  title="${d.name}"
                 >
-                  <span class="text-[11px] ${isSelected ? 'text-black font-semibold' : (isToday ? 'text-purple-400 font-semibold' : 'text-zinc-400')}">${d.fullLabel}</span>
-                  <div class="w-1.5 h-1.5 rounded-full mt-1.5 ${
-                    routineForDay 
-                      ? (isSelected ? 'bg-black' : 'bg-emerald-400') 
-                      : 'bg-transparent'
-                  }"></div>
+                  <span class="day-label">${d.fullLabel}</span>
+                  <span class="day-dot ${routineForDay ? 'has-routine' : ''}"></span>
                 </button>
               `;
             }).join('')}
@@ -78,7 +71,7 @@ export class DashboardScreen {
         <section class="space-y-2.5">
           <div class="flex items-center justify-between px-1">
             <h2 class="text-sm font-semibold text-zinc-300">Treino Programado</h2>
-            <button type="button" id="btn-edit-today-routine" class="text-xs text-purple-400 font-medium">
+            <button type="button" id="btn-edit-today-routine" class="apple-link-btn">
               Configurar séries
             </button>
           </div>
@@ -89,7 +82,7 @@ export class DashboardScreen {
         <section class="space-y-2.5">
           <div class="flex items-center justify-between px-1">
             <h2 class="text-sm font-semibold text-zinc-300">Todas as Rotinas</h2>
-            <button type="button" id="btn-manage-routines" class="text-xs text-purple-400 font-medium">
+            <button type="button" id="btn-manage-routines" class="apple-link-btn">
               Gerenciar
             </button>
           </div>
@@ -103,7 +96,7 @@ export class DashboardScreen {
         <section class="space-y-2.5">
           <div class="flex items-center justify-between px-1">
             <h2 class="text-sm font-semibold text-zinc-300">Últimos Treinos Salvos</h2>
-            <button type="button" id="btn-view-history" class="text-xs text-purple-400 font-medium">
+            <button type="button" id="btn-view-history" class="apple-link-btn">
               Ver histórico (${logs.length})
             </button>
           </div>

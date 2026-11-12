@@ -30,6 +30,7 @@ export class RoutineManagerScreen {
   constructor(app) {
     this.app = app;
     this.editingRoutine = null;
+    this.expandedExerciseIndex = 0;
   }
 
   render(container) {
@@ -131,6 +132,7 @@ export class RoutineManagerScreen {
 
   bindListEvents(container) {
     container.querySelector('#btn-new-routine')?.addEventListener('click', () => {
+      this.expandedExerciseIndex = 0;
       this.editingRoutine = {
         id: generateId('routine'),
         name: 'Nova Rotina',
@@ -159,6 +161,7 @@ export class RoutineManagerScreen {
         const id = btn.getAttribute('data-edit-routine');
         const routine = storageService.getRoutineById(id);
         if (routine) {
+          this.expandedExerciseIndex = 0;
           this.editingRoutine = JSON.parse(JSON.stringify(routine));
           this.render(container);
         }
@@ -178,6 +181,9 @@ export class RoutineManagerScreen {
 
   renderEditor(container) {
     const routine = this.editingRoutine;
+    if (this.expandedExerciseIndex === null || this.expandedExerciseIndex >= routine.exercises.length) {
+      this.expandedExerciseIndex = routine.exercises.length > 0 ? 0 : null;
+    }
 
     container.innerHTML = `
       <div class="screen-routine-editor space-y-6 animate-fade-in pb-16">
@@ -225,10 +231,13 @@ export class RoutineManagerScreen {
           </div>
         </div>
 
-        <!-- Exercícios -->
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-zinc-300">Exercícios (${routine.exercises.length})</h3>
+        <!-- Lista de Exercícios com Acordeão / Expansão sob Demanda -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between px-1">
+            <div>
+              <h3 class="text-sm font-semibold text-zinc-200">Exercícios (${routine.exercises.length})</h3>
+              <p class="text-[11px] text-zinc-500">Toque em um exercício para abrir e editar os detalhes</p>
+            </div>
             <button 
               type="button" 
               id="btn-add-exercise" 
@@ -238,8 +247,13 @@ export class RoutineManagerScreen {
             </button>
           </div>
 
-          <div class="space-y-4">
-            ${routine.exercises.map((ex, exIndex) => this.renderExerciseCard(ex, exIndex)).join('')}
+          <div class="space-y-3">
+            ${routine.exercises.map((ex, exIndex) => {
+              const isExpanded = this.expandedExerciseIndex === exIndex;
+              return isExpanded
+                ? this.renderExpandedExerciseCard(ex, exIndex)
+                : this.renderCollapsedExerciseCard(ex, exIndex);
+            }).join('')}
           </div>
         </div>
 
@@ -249,43 +263,122 @@ export class RoutineManagerScreen {
     this.bindEditorEvents(container);
   }
 
-  renderExerciseCard(exercise, exIndex) {
+  renderCollapsedExerciseCard(exercise, exIndex) {
+    exercise.sets = sortSetsByCategory(exercise.sets);
+    const counts = {
+      warmup: exercise.sets.filter(s => s.type === 'warmup').length,
+      feeder: exercise.sets.filter(s => s.type === 'feeder').length,
+      work: exercise.sets.filter(s => s.type === 'work').length,
+      top: exercise.sets.filter(s => s.type === 'top').length
+    };
+    const totalSets = exercise.sets.length;
+
+    return `
+      <div 
+        class="apple-card p-4 exercise-accordion-summary" 
+        data-expand-exercise="${exIndex}"
+        title="Toque para editar os detalhes"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 flex-shrink-0">
+              #${exIndex + 1}
+            </span>
+            <div class="min-w-0">
+              <h4 class="text-sm font-semibold text-white truncate">${exercise.name || 'Novo Exercício'}</h4>
+              <p class="text-[11px] text-zinc-400 mt-0.5">
+                ${exercise.muscleGroup || 'Geral'} • ${totalSets} ${totalSets === 1 ? 'série' : 'séries'}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <!-- Badges resumidas no desktop -->
+            <div class="hidden sm:flex items-center gap-1">
+              ${counts.warmup ? `<span class="badge-warmup text-[10px] px-2 py-0.5 rounded-full font-medium">${counts.warmup} Aquec</span>` : ''}
+              ${counts.feeder ? `<span class="badge-feeder text-[10px] px-2 py-0.5 rounded-full font-medium">${counts.feeder} Feeder</span>` : ''}
+              ${counts.work ? `<span class="badge-work text-[10px] px-2 py-0.5 rounded-full font-medium">${counts.work} Work</span>` : ''}
+              ${counts.top ? `<span class="badge-top text-[10px] px-2 py-0.5 rounded-full font-medium">${counts.top} Top</span>` : ''}
+            </div>
+
+            <!-- Indicador Editar -->
+            <div class="apple-link-btn text-xs">
+              <span>Editar</span>
+              ${icons.chevronDown}
+            </div>
+          </div>
+        </div>
+
+        <!-- Badges para mobile -->
+        <div class="flex sm:hidden items-center gap-1 mt-2.5 pt-2 border-t border-zinc-800/60 flex-wrap">
+          ${counts.warmup ? `<span class="badge-warmup text-[9px] px-2 py-0.5 rounded-full font-medium">${counts.warmup} Aquec</span>` : ''}
+          ${counts.feeder ? `<span class="badge-feeder text-[9px] px-2 py-0.5 rounded-full font-medium">${counts.feeder} Feeder</span>` : ''}
+          ${counts.work ? `<span class="badge-work text-[9px] px-2 py-0.5 rounded-full font-medium">${counts.work} Work</span>` : ''}
+          ${counts.top ? `<span class="badge-top text-[9px] px-2 py-0.5 rounded-full font-medium">${counts.top} Top</span>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  renderExpandedExerciseCard(exercise, exIndex) {
     // Mantém as séries sempre ordenadas: Aquecimento -> Feeder -> Work -> Top
     exercise.sets = sortSetsByCategory(exercise.sets);
 
     return `
-      <div class="apple-card p-5 space-y-5" data-exercise-index="${exIndex}">
-        
-        <!-- Nome e Grupo Muscular -->
-        <div class="flex items-start justify-between gap-3 pb-3 border-b border-zinc-800">
-          <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="sm:col-span-2 space-y-1">
-              <label class="text-[11px] text-zinc-400 font-medium">Exercício #${exIndex + 1}</label>
-              <input 
-                type="text" 
-                class="input-dark w-full px-3 py-2 text-sm font-semibold ex-name-input" 
-                value="${exercise.name}" 
-                placeholder="Ex: Supino Reto com Barra"
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="text-[11px] text-zinc-400 font-medium">Músculo Alvo</label>
-              <input 
-                type="text" 
-                class="input-dark w-full px-3 py-2 text-sm ex-muscle-input" 
-                value="${exercise.muscleGroup}" 
-                placeholder="Ex: Peito"
-              />
-            </div>
+      <div 
+        class="apple-card p-5 space-y-5 border border-purple-500/40" 
+        data-exercise-index="${exIndex}"
+      >
+        <!-- Barra Superior do Exercício Aberto -->
+        <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-400">
+              #${exIndex + 1}
+            </span>
+            <span class="text-xs font-semibold text-white">Editando Exercício</span>
           </div>
-          <button 
-            type="button" 
-            data-remove-exercise="${exIndex}" 
-            class="btn-secondary p-2 rounded-full text-red-400 mt-5"
-            title="Remover Exercício"
-          >
-            ${icons.trash}
-          </button>
+
+          <div class="flex items-center gap-1">
+            <button 
+              type="button" 
+              class="apple-link-btn text-xs text-zinc-400"
+              data-toggle-collapse="${exIndex}"
+              title="Recolher detalhes"
+            >
+              <span>Recolher</span>
+              ${icons.chevronUp}
+            </button>
+            <button 
+              type="button" 
+              data-remove-exercise="${exIndex}" 
+              class="apple-icon-btn text-red-400 ml-1"
+              title="Excluir Exercício"
+            >
+              ${icons.trash}
+            </button>
+          </div>
+        </div>
+
+        <!-- Nome e Grupo Muscular -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2 space-y-1">
+            <label class="text-[11px] text-zinc-400 font-medium">Nome do Exercício</label>
+            <input 
+              type="text" 
+              class="input-dark w-full px-3 py-2 text-sm font-semibold ex-name-input" 
+              value="${exercise.name}" 
+              placeholder="Ex: Supino Reto com Barra"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[11px] text-zinc-400 font-medium">Músculo Alvo</label>
+            <input 
+              type="text" 
+              class="input-dark w-full px-3 py-2 text-sm ex-muscle-input" 
+              value="${exercise.muscleGroup}" 
+              placeholder="Ex: Peito"
+            />
+          </div>
         </div>
 
         <!-- Controle Rápido por Tipo de Série (Quantidade + Descanso da Categoria) -->
@@ -305,7 +398,7 @@ export class RoutineManagerScreen {
               return `
                 <div class="flex items-center justify-between p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800/80">
                   <div>
-                    <span class="${badgeClass} text-xs px-2.5 py-0.5 rounded-full inline-block">${SET_TYPE_LABELS[type]}</span>
+                    <span class="${badgeClass} text-xs px-2.5 py-0.5 rounded-full inline-block font-semibold">${SET_TYPE_LABELS[type]}</span>
                     <div class="flex items-center gap-1.5 mt-2">
                       <span class="text-[11px] text-zinc-400">Descanso:</span>
                       <input 
@@ -364,6 +457,17 @@ export class RoutineManagerScreen {
           `}
         </div>
 
+        <!-- Botão de Conclusão / Recolher do Exercício -->
+        <div class="pt-2 flex justify-end">
+          <button 
+            type="button" 
+            class="btn-secondary text-xs px-4 py-2 rounded-xl flex items-center gap-1.5"
+            data-toggle-collapse="${exIndex}"
+          >
+            ${icons.check} Concluir este exercício
+          </button>
+        </div>
+
       </div>
     `;
   }
@@ -377,7 +481,7 @@ export class RoutineManagerScreen {
       <div class="flex items-center justify-between flex-wrap gap-2 p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/60 text-xs">
         <div class="flex items-center gap-2">
           <span class="text-zinc-500 font-mono text-[11px] w-4">${sIndex + 1}.</span>
-          <span class="${badgeClass} text-[11px] px-2.5 py-0.5 rounded-full">
+          <span class="${badgeClass} text-[11px] px-2.5 py-0.5 rounded-full font-semibold">
             ${label}
           </span>
         </div>
@@ -423,11 +527,12 @@ export class RoutineManagerScreen {
             <option value="placas" ${set.unit === 'placas' ? 'selected' : ''}>placas</option>
           </select>
 
+          <!-- Botão Excluir Série com visual limpo -->
           <button 
             type="button" 
             data-remove-set="${sIndex}" 
             data-ex-idx="${exIndex}" 
-            class="p-1 text-zinc-500 hover:text-red-400" 
+            class="set-remove-btn" 
             title="Remover série"
           >
             ${icons.x}
@@ -468,6 +573,26 @@ export class RoutineManagerScreen {
       this.render(container);
     });
 
+    // Expandir exercício ao clicar no resumo
+    container.querySelectorAll('[data-expand-exercise]').forEach(card => {
+      card.addEventListener('click', () => {
+        this.syncInputsToModel(container);
+        const exIdx = parseInt(card.getAttribute('data-expand-exercise'), 10);
+        this.expandedExerciseIndex = exIdx;
+        this.render(container);
+      });
+    });
+
+    // Recolher detalhes do exercício aberto
+    container.querySelectorAll('[data-toggle-collapse]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.syncInputsToModel(container);
+        this.expandedExerciseIndex = null;
+        this.render(container);
+      });
+    });
+
     container.querySelector('#btn-add-exercise')?.addEventListener('click', () => {
       this.syncInputsToModel(container);
       routine.exercises.push({
@@ -482,21 +607,30 @@ export class RoutineManagerScreen {
           { id: generateId('s'), type: 'top', targetReps: 6, unit: 'kg', restTimeSeconds: 180, completed: false }
         ]
       });
+      // Abre automaticamente o novo exercício adicionado
+      this.expandedExerciseIndex = routine.exercises.length - 1;
       this.render(container);
     });
 
     container.querySelectorAll('[data-remove-exercise]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.syncInputsToModel(container);
         const exIdx = parseInt(btn.getAttribute('data-remove-exercise'), 10);
         routine.exercises.splice(exIdx, 1);
+        if (this.expandedExerciseIndex === exIdx) {
+          this.expandedExerciseIndex = routine.exercises.length > 0 ? Math.min(exIdx, routine.exercises.length - 1) : null;
+        } else if (this.expandedExerciseIndex > exIdx) {
+          this.expandedExerciseIndex--;
+        }
         this.render(container);
       });
     });
 
     // Steppers (+ e -) de cada Categoria (Aquecimento, Feeder, Work, Top)
     container.querySelectorAll('[data-step-action]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.syncInputsToModel(container);
         const exIdx = parseInt(btn.getAttribute('data-ex-idx'), 10);
         const type = btn.getAttribute('data-step-type');
@@ -520,7 +654,6 @@ export class RoutineManagerScreen {
           });
           ex.sets = sortSetsByCategory(ex.sets);
         } else if (action === 'remove') {
-          // Remove a última série daquele tipo específico
           for (let i = ex.sets.length - 1; i >= 0; i--) {
             if (ex.sets[i].type === type) {
               ex.sets.splice(i, 1);
@@ -553,7 +686,8 @@ export class RoutineManagerScreen {
 
     // Remover uma série individual
     container.querySelectorAll('[data-remove-set]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.syncInputsToModel(container);
         const exIdx = parseInt(btn.getAttribute('data-ex-idx'), 10);
         const sIdx = parseInt(btn.getAttribute('data-remove-set'), 10);

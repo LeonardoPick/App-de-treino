@@ -32,6 +32,22 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 body.apple-body {
   font-family: var(--font-sf);
   background-color: var(--apple-bg);
@@ -278,6 +294,118 @@ body.apple-body {
 }
 .btn-secondary:hover, .rs-btn-ghost:hover {
   background-color: #3A3A3C;
+}
+
+/* Link de Ação Minimalista Apple */
+.apple-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--apple-blue);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s, background-color 0.15s;
+}
+.apple-link-btn:hover {
+  background-color: rgba(10, 132, 255, 0.12);
+  opacity: 0.95;
+}
+
+/* Seletor Semanal Apple Minimalista (Seg a Dom) */
+.day-pill-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 2px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--apple-label-secondary);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-height: 52px;
+}
+.day-pill-btn:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+  color: #FFFFFF;
+}
+.day-pill-btn.active {
+  background-color: #2C2C2E;
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #FFFFFF;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+}
+.day-pill-btn.is-today:not(.active) {
+  border-color: rgba(10, 132, 255, 0.45);
+}
+.day-pill-btn.is-today:not(.active) .day-label {
+  color: var(--apple-blue);
+  font-weight: 600;
+}
+.day-pill-btn.active .day-label {
+  color: #FFFFFF;
+  font-weight: 700;
+}
+.day-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.day-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-top: 5px;
+  background-color: transparent;
+  transition: all 0.18s ease;
+}
+.day-dot.has-routine {
+  background-color: var(--apple-green);
+  box-shadow: 0 0 6px rgba(48, 209, 88, 0.5);
+}
+.day-pill-btn.active .day-dot.has-routine {
+  background-color: var(--apple-green);
+  box-shadow: 0 0 8px rgba(48, 209, 88, 0.8);
+}
+
+/* Botão minimalista de exclusão de série (X) */
+.set-remove-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--apple-label-secondary);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.set-remove-btn:hover {
+  background-color: rgba(255, 69, 58, 0.18);
+  color: var(--apple-red);
+}
+
+/* Card Resumo do Acordeão de Exercícios */
+.exercise-accordion-summary {
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.exercise-accordion-summary:hover {
+  background-color: var(--apple-card-elevated);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+.exercise-accordion-summary:active {
+  transform: scale(0.99);
 }
 
 /* Inputs Minimalistas iOS */
