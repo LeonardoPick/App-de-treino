@@ -14,9 +14,11 @@ import {
   TECHNIQUE_SET_TYPES_ORDER,
   SET_TYPE_LABELS,
   SET_TYPE_SHORT_LABELS,
+  SET_TYPE_DESCRIPTIONS,
   DEFAULT_SET_REST_SECONDS,
   DEFAULT_SET_TARGET_REPS,
   DEFAULT_CLUSTER_BLOCKS,
+  isTechniqueSetType,
   formatClusterBreakdown,
   sortSetsByCategory
 } from '../models.js';
@@ -354,11 +356,15 @@ export class RoutineManagerScreen {
     const count = setsOfType.length;
     const currentTypeRest = setsOfType[0]?.restTimeSeconds || DEFAULT_SET_REST_SECONDS[type];
     const badgeClass = `badge-${type}`;
+    const isTechnique = isTechniqueSetType(type);
 
     return `
-      <div class="flex items-center justify-between p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800/80">
-        <div>
-          <span class="${badgeClass} text-xs px-2.5 py-0.5 rounded-full inline-block font-semibold">${SET_TYPE_LABELS[type]}</span>
+      <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800/80">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="${badgeClass} text-xs px-2.5 py-0.5 rounded-full inline-block font-semibold">${SET_TYPE_LABELS[type]}</span>
+            ${isTechnique ? `<span class="text-[11px] text-zinc-500 truncate">${SET_TYPE_DESCRIPTIONS[type]}</span>` : ''}
+          </div>
           <div class="flex items-center gap-1.5 mt-2">
             <span class="text-[11px] text-zinc-400">Descanso:</span>
             <input 
@@ -376,7 +382,7 @@ export class RoutineManagerScreen {
         </div>
 
         <!-- Stepper iOS (- / Qtd / +) -->
-        <div class="apple-stepper">
+        <div class="apple-stepper flex-shrink-0">
           <button 
             type="button" 
             class="apple-stepper-btn" 
@@ -568,7 +574,7 @@ export class RoutineManagerScreen {
               <span class="text-xs font-semibold text-zinc-300">Complemento à Última Série</span>
               <span class="text-[11px] text-zinc-500">Back Off Set, Rest Pause ou Cluster Set</span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="grid grid-cols-1 gap-2">
               ${TECHNIQUE_SET_TYPES_ORDER.map(type => this.renderSetCategoryControl(exercise, exIndex, type)).join('')}
             </div>
           </div>
