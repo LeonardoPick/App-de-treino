@@ -20,130 +20,472 @@ const CACHE_KEYS = {
 };
 
 const DEFAULT_ROUTINES = [
+  // ==========================================
+  // TREINO A — LEGS (Segunda-feira)
+  // ==========================================
   {
-    id: 'routine_peito_triceps',
-    name: 'Treino A — Peito, Tríceps & Ombro',
-    dayOfWeek: 1,
+    id: 'routine_legs_a',
+    name: 'Treino A — Legs',
+    dayOfWeek: 1, // Segunda-feira
     exercises: [
       {
-        id: 'ex_supino_reto',
-        name: 'Supino Reto com Barra',
-        muscleGroup: 'Peito',
+        id: 'ex_a1',
+        name: 'Mesa Flexora',
+        muscleGroup: 'Posterior de Coxa',
         restTimeSeconds: 90,
         sets: [
-          { id: 's1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 's2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 's3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 's4', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 's5', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+          { id: 's_a1_1', type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a1_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a1_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_a1_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
+          { id: 's_a1_5', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 20, completed: false } // Back Off Set 20s
         ]
       },
       {
-        id: 'ex_supino_inc',
-        name: 'Supino Inclinado com Halteres',
-        muscleGroup: 'Peito Superior',
+        id: 'ex_a2',
+        name: 'Cadeira Abdutora',
+        muscleGroup: 'Glúteo',
         restTimeSeconds: 90,
         sets: [
-          { id: 's6', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 's7', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 's8', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 's9', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+          { id: 's_a2_1', type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a2_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a2_3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_a2_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
         ]
       },
       {
-        id: 'ex_crossover',
-        name: 'Crossover na Polia Média',
-        muscleGroup: 'Peito',
-        restTimeSeconds: 60,
+        id: 'ex_a3',
+        name: 'Elevação Pélvica',
+        muscleGroup: 'Glúteo',
+        restTimeSeconds: 90,
         sets: [
-          { id: 's10', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
-          { id: 's11', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
-          { id: 's12', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false }
+          { id: 's_a3_1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a3_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a3_3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_a3_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
         ]
       },
       {
-        id: 'ex_triceps_corda',
-        name: 'Tríceps na Polia com Corda',
+        id: 'ex_a4',
+        name: 'Stiff',
+        muscleGroup: 'Posterior / Glúteo',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_a4_1', type: 'feeder', targetReps: 8, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a4_2', type: 'feeder', targetReps: 4, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a4_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_a4_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_a5',
+        name: 'Cadeira Extensora',
+        muscleGroup: 'Quadríceps',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_a5_1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a5_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_a5_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_a5_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false } // + Rest Pause 30s
+        ]
+      },
+      {
+        id: 'ex_a6',
+        name: 'Passada c/ Halteres',
+        muscleGroup: 'Quadríceps / Glúteo',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_a6_1', type: 'work', targetReps: 20, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_a6_2', type: 'work', targetReps: 20, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_a6_3', type: 'work', targetReps: 20, unit: 'kg', restTimeSeconds: 90, completed: false }
+        ]
+      }
+    ]
+  },
+
+  // ==========================================
+  // TREINO B — PUSH (Terça-feira)
+  // ==========================================
+  {
+    id: 'routine_push_b',
+    name: 'Treino B — Push',
+    dayOfWeek: 2, // Terça-feira
+    exercises: [
+      {
+        id: 'ex_b1',
+        name: 'Panturrilha em Pé Máq.',
+        muscleGroup: 'Panturrilha',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_b1_1', type: 'feeder', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_b1_2', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_b1_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_b1_4', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false }
+        ]
+      },
+      {
+        id: 'ex_b2',
+        name: 'Voador',
+        muscleGroup: 'Peitoral',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_b2_1', type: 'warmup', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_b2_2', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_b2_3', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_b2_4', type: 'top', targetReps: 6, unit: 'placas', restTimeSeconds: 120, completed: false },
+          { id: 's_b2_5', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 20, completed: false } // Back Off Set 20s
+        ]
+      },
+      {
+        id: 'ex_b3',
+        name: 'Supino Reto Máq. Articulada Horizontal',
+        muscleGroup: 'Peitoral',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_b3_1', type: 'feeder', targetReps: 8, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_b3_2', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_b3_3', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_b4',
+        name: 'Elevação Lateral c/ Halteres',
+        muscleGroup: 'Ombro',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_b4_1', type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_b4_2', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_b4_3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_b4_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
+          { id: 's_b4_5', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 20, completed: false } // Back Off Set 20s
+        ]
+      },
+      {
+        id: 'ex_b5',
+        name: 'Crucifixo Inclinado Polia Baixa ou Halteres',
+        muscleGroup: 'Peitoral Superior',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_b5_1', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_b5_2', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_b5_3', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_b6',
+        name: 'Tríceps Corda',
         muscleGroup: 'Tríceps',
-        restTimeSeconds: 60,
+        restTimeSeconds: 90,
         sets: [
-          { id: 's13', type: 'warmup', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
-          { id: 's14', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
-          { id: 's15', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
-          { id: 's16', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
+          { id: 's_b6_1', type: 'feeder', targetReps: 8, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_b6_2', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_b6_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_b6_4', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
         ]
       }
     ]
   },
+
+  // ==========================================
+  // TREINO C — PULL (Quarta-feira)
+  // ==========================================
   {
-    id: 'routine_costas_biceps',
-    name: 'Treino B — Costas, Bíceps & Posterior',
-    dayOfWeek: 3,
+    id: 'routine_pull_c',
+    name: 'Treino C — Pull',
+    dayOfWeek: 3, // Quarta-feira
     exercises: [
       {
-        id: 'ex_puxada_alta',
-        name: 'Puxada Alta Frontal (Pulldown)',
+        id: 'ex_c1',
+        name: 'Puxada Alta Pronada',
         muscleGroup: 'Costas',
         restTimeSeconds: 90,
         sets: [
-          { id: 'sb1', type: 'warmup', targetReps: 12, unit: 'placas', restTimeSeconds: 60, completed: false },
-          { id: 'sb2', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 90, completed: false },
-          { id: 'sb3', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false },
-          { id: 'sb4', type: 'top', targetReps: 6, unit: 'placas', restTimeSeconds: 150, completed: false }
+          { id: 's_c1_1', type: 'warmup', targetReps: 12, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_c1_2', type: 'feeder', targetReps: 8, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_c1_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_c1_4', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
         ]
       },
       {
-        id: 'ex_remada_curvada',
-        name: 'Remada Curvada com Barra',
+        id: 'ex_c2',
+        name: 'Remada Articulada DY Row',
         muscleGroup: 'Costas',
-        restTimeSeconds: 120,
+        restTimeSeconds: 90,
         sets: [
-          { id: 'sb5', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 'sb6', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 'sb7', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 'sb8', type: 'top', targetReps: 6, unit: 'kg', restTimeSeconds: 180, completed: false }
+          { id: 's_c2_1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_c2_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_c2_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_c2_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
         ]
       },
       {
-        id: 'ex_rosca_direta',
-        name: 'Rosca Direta Barra W',
-        muscleGroup: 'Bíceps',
-        restTimeSeconds: 60,
+        id: 'ex_c3',
+        name: 'Pulldown Uni c/ Caneleira Banco 90°',
+        muscleGroup: 'Costas',
+        restTimeSeconds: 90,
         sets: [
-          { id: 'sb9', type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 45, completed: false },
-          { id: 'sb10', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 75, completed: false },
-          { id: 'sb11', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false }
+          { id: 's_c3_1', type: 'feeder', targetReps: 8, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_c3_2', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_c3_3', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_c4',
+        name: 'Encolhimento Kelso Shrugs',
+        muscleGroup: 'Trapézio / Costas',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_c4_1', type: 'feeder', targetReps: 8, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_c4_2', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_c4_3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_c4_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_c5',
+        name: 'Voador Invertido',
+        muscleGroup: 'Deltóide Posterior',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_c5_1', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_c5_2', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_c5_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_c5_4', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false }
         ]
       }
     ]
   },
+
+  // ==========================================
+  // TREINO D — ARMS (Quinta-feira)
+  // ==========================================
   {
-    id: 'routine_pernas',
-    name: 'Treino C — Pernas Completo',
-    dayOfWeek: 5,
+    id: 'routine_arms_d',
+    name: 'Treino D — Arms',
+    dayOfWeek: 4, // Quinta-feira
     exercises: [
       {
-        id: 'ex_agachamento',
-        name: 'Agachamento Livre com Barra',
-        muscleGroup: 'Quadríceps & Glúteos',
-        restTimeSeconds: 150,
+        id: 'ex_d1',
+        name: 'Rosca Direta Polia Baixa',
+        muscleGroup: 'Bíceps',
+        restTimeSeconds: 90,
         sets: [
-          { id: 'sc1', type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 'sc2', type: 'feeder', targetReps: 5, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 'sc3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 150, completed: false },
-          { id: 'sc4', type: 'top', targetReps: 5, unit: 'kg', restTimeSeconds: 180, completed: false }
+          { id: 's_d1_1', type: 'warmup', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_d1_2', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_d1_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_d1_4', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_d1_5', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
         ]
       },
       {
-        id: 'ex_leg_press',
-        name: 'Leg Press 45°',
-        muscleGroup: 'Pernas',
-        restTimeSeconds: 120,
+        id: 'ex_d2',
+        name: 'Tríceps Pulley',
+        muscleGroup: 'Tríceps',
+        restTimeSeconds: 90,
         sets: [
-          { id: 'sc5', type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 'sc6', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 'sc7', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 'sc8', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 180, completed: false }
+          { id: 's_d2_1', type: 'warmup', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_d2_2', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_d2_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_d2_4', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_d2_5', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_d3',
+        name: 'Rosca Scott Máq Uni.',
+        muscleGroup: 'Bíceps',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_d3_1', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_d3_2', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_d3_3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_d3_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_d4',
+        name: 'Tríceps Francês c/ Corda',
+        muscleGroup: 'Tríceps',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_d4_1', type: 'feeder', targetReps: 8, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_d4_2', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_d4_3', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_d4_4', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_d5',
+        name: 'Elevação Lateral Uni Polia p/ Trás',
+        muscleGroup: 'Ombro Lateral',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_d5_1', type: 'warmup', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_d5_2', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_d5_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_d5_4', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false }
+        ]
+      },
+      {
+        id: 'ex_d6',
+        name: 'Rosca Martelo c/ Corda',
+        muscleGroup: 'Bíceps / Braquial',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_d6_1', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_d6_2', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_d6_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false }
+        ]
+      }
+    ]
+  },
+
+  // ==========================================
+  // TREINO E — LEGS (Sexta-feira)
+  // ==========================================
+  {
+    id: 'routine_legs_e',
+    name: 'Treino E — Legs',
+    dayOfWeek: 5, // Sexta-feira
+    exercises: [
+      {
+        id: 'ex_e1',
+        name: 'Cadeira Adutora',
+        muscleGroup: 'Adutores',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_e1_1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_e1_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_e1_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_e1_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_e2',
+        name: 'Agachamento Livre Smith',
+        muscleGroup: 'Quadríceps / Glúteo',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_e2_1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_e2_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_e2_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_e2_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_e3',
+        name: 'Cadeira Flexora',
+        muscleGroup: 'Posterior de Coxa',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_e3_1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_e3_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_e3_3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_e3_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_e4',
+        name: 'Cadeira Extensora',
+        muscleGroup: 'Quadríceps',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_e4_1', type: 'feeder', targetReps: 8, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_e4_2', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_e4_3', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
+          { id: 's_e4_4', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 30, completed: false } // Back Off Set 30s
+        ]
+      },
+      {
+        id: 'ex_e5',
+        name: 'RDL (Romanian Deadlift)',
+        muscleGroup: 'Posterior / Glúteo',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_e5_1', type: 'feeder', targetReps: 8, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_e5_2', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_e5_3', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      }
+    ]
+  },
+
+  // ==========================================
+  // TREINO F — UPPER (Sábado)
+  // ==========================================
+  {
+    id: 'routine_upper_f',
+    name: 'Treino F — Upper',
+    dayOfWeek: 6, // Sábado
+    exercises: [
+      {
+        id: 'ex_f1',
+        name: 'Desenvolvimento c/ Halteres',
+        muscleGroup: 'Ombro',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_f1_1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_f1_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_f1_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_f1_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_f2',
+        name: 'Puxada Alta c/ Triângulo',
+        muscleGroup: 'Costas',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_f2_1', type: 'warmup', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_f2_2', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_f2_3', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_f2_4', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_f3',
+        name: 'Supino Inclinado Máq. ou Barra',
+        muscleGroup: 'Peitoral Superior',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_f3_1', type: 'feeder', targetReps: 8, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_f3_2', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_f3_3', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
+          { id: 's_f3_4', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 30, completed: false } // Back Off Set 30s
+        ]
+      },
+      {
+        id: 'ex_f4',
+        name: 'Remada T-Bar Row',
+        muscleGroup: 'Costas',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_f4_1', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's_f4_2', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's_f4_3', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_f5',
+        name: 'Crossover Polia Baixa c/ Banco 90°',
+        muscleGroup: 'Peitoral',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_f5_1', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_f5_2', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_f5_3', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
+        ]
+      },
+      {
+        id: 'ex_f6',
+        name: 'Rosca Direta Máq. Horizontal',
+        muscleGroup: 'Bíceps',
+        restTimeSeconds: 90,
+        sets: [
+          { id: 's_f6_1', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's_f6_2', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's_f6_3', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false },
+          { id: 's_f6_4', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 20, completed: false } // Back Off Set 20s
         ]
       }
     ]
@@ -332,10 +674,16 @@ class StorageService {
     const cachedLogs = await this.idbGet(STORE_CACHE, CACHE_KEYS.WORKOUT_LOGS);
     const cachedActive = await this.idbGet(STORE_CACHE, CACHE_KEYS.ACTIVE_WORKOUT);
 
-    if (Array.isArray(cachedRoutines) && cachedRoutines.length > 0) {
-      this.memoryCache.routines = cachedRoutines.map(r => this.normalizeRoutineSets(r));
-    } else {
+    const routineVersion = localStorage.getItem('workout_routines_version_erick_v1');
+    const isOldSeed = Array.isArray(cachedRoutines) && cachedRoutines.some(r => r.id === 'routine_peito_triceps');
+
+    // Se o usuário ainda não migrou para as fichas de A ao F ou tem o seed antigo, atualiza automaticamente
+    if (routineVersion !== 'erick_personal_v1' || isOldSeed || !Array.isArray(cachedRoutines) || cachedRoutines.length === 0) {
+      this.memoryCache.routines = DEFAULT_ROUTINES.map(r => this.normalizeRoutineSets(r));
       await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
+      localStorage.setItem('workout_routines_version_erick_v1', 'erick_personal_v1');
+    } else {
+      this.memoryCache.routines = cachedRoutines.map(r => this.normalizeRoutineSets(r));
     }
 
     if (Array.isArray(cachedLogs) && cachedLogs.length > 0) {
@@ -354,6 +702,18 @@ class StorageService {
     }
 
     window.dispatchEvent(new CustomEvent('storage-synced'));
+  }
+
+  /**
+   * Restaura o plano oficial do Personal Trainer (Treinos A ao F de Segunda a Sábado)
+   */
+  async restoreOfficialPlan() {
+    this.memoryCache.routines = DEFAULT_ROUTINES.map(r => this.normalizeRoutineSets(r));
+    await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
+    localStorage.setItem('workout_routines_version_erick_v1', 'erick_personal_v1');
+    window.dispatchEvent(new CustomEvent('storage-synced'));
+    window.dispatchEvent(new CustomEvent('workout-data-saved'));
+    return this.memoryCache.routines;
   }
 
   // --- Fila de Sincronização Offline -> Supabase ---

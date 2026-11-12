@@ -109,15 +109,25 @@ export class RoutineManagerScreen {
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-2xl font-bold text-white tracking-tight">Rotinas</h1>
-            <p class="text-xs text-zinc-400 mt-0.5">Personalize séries e tempos de descanso por categoria</p>
+            <p class="text-xs text-zinc-400 mt-0.5">Treinos A ao F (Segunda a Sábado)</p>
           </div>
-          <button 
-            type="button" 
-            id="btn-new-routine" 
-            class="btn-primary text-xs px-4 py-2.5 rounded-full font-semibold flex items-center gap-1.5"
-          >
-            ${icons.plus} Nova Rotina
-          </button>
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              id="btn-restore-plan" 
+              class="btn-secondary text-xs px-3 py-2 rounded-full font-medium text-zinc-300 hover:text-white"
+              title="Restaurar fichas oficiais A ao F do Personal Trainer"
+            >
+              Restaurar Ficha A-F
+            </button>
+            <button 
+              type="button" 
+              id="btn-new-routine" 
+              class="btn-primary text-xs px-4 py-2.5 rounded-full font-semibold flex items-center gap-1.5"
+            >
+              ${icons.plus} Nova Rotina
+            </button>
+          </div>
         </div>
 
         <div class="space-y-3">
@@ -190,6 +200,17 @@ export class RoutineManagerScreen {
   }
 
   bindListEvents(container) {
+    container.querySelector('#btn-restore-plan')?.addEventListener('click', async () => {
+      const confirmed = window.confirm(
+        'Deseja restaurar as fichas oficiais do Personal Trainer (Treinos A ao F de Segunda a Sábado)? Suas rotinas atuais serão redefinidas para o plano oficial.'
+      );
+      if (confirmed) {
+        this.clearDraft();
+        await storageService.restoreOfficialPlan();
+        this.renderList(container);
+      }
+    });
+
     container.querySelector('#btn-new-routine')?.addEventListener('click', () => {
       this.clearDraft();
       this.expandedExerciseIndex = 0;
