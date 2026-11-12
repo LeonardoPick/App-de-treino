@@ -45,16 +45,16 @@ export const SET_TYPE_SHORT_LABELS = {
 
 export const DEFAULT_SET_REST_SECONDS = {
   warmup: 60,
-  feeder: 90,
-  work: 120,
-  top: 180
+  feeder: 60,
+  work: 90,
+  top: 120
 };
 
 export const DEFAULT_SET_TARGET_REPS = {
-  warmup: 12,
+  warmup: 10,
   feeder: 6,
-  work: 8,
-  top: 6
+  work: 10,
+  top: 8
 };
 
 export const SET_TYPE_DESCRIPTIONS = {

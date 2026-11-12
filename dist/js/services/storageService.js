@@ -29,13 +29,13 @@ const DEFAULT_ROUTINES = [
         id: 'ex_supino_reto',
         name: 'Supino Reto com Barra',
         muscleGroup: 'Peito',
-        restTimeSeconds: 120,
+        restTimeSeconds: 90,
         sets: [
-          { id: 's1', type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 's2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 's3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 's4', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 's5', type: 'top', targetReps: 5, unit: 'kg', restTimeSeconds: 180, completed: false }
+          { id: 's1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's4', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's5', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
         ]
       },
       {
@@ -45,9 +45,9 @@ const DEFAULT_ROUTINES = [
         restTimeSeconds: 90,
         sets: [
           { id: 's6', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: 's7', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 's8', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 's9', type: 'top', targetReps: 6, unit: 'kg', restTimeSeconds: 150, completed: false }
+          { id: 's7', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: 's8', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: 's9', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
         ]
       },
       {
@@ -56,9 +56,9 @@ const DEFAULT_ROUTINES = [
         muscleGroup: 'Peito',
         restTimeSeconds: 60,
         sets: [
-          { id: 's10', type: 'feeder', targetReps: 8, unit: 'placas', restTimeSeconds: 60, completed: false },
-          { id: 's11', type: 'work', targetReps: 12, unit: 'placas', restTimeSeconds: 75, completed: false },
-          { id: 's12', type: 'work', targetReps: 12, unit: 'placas', restTimeSeconds: 75, completed: false }
+          { id: 's10', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's11', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's12', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false }
         ]
       },
       {
@@ -67,10 +67,10 @@ const DEFAULT_ROUTINES = [
         muscleGroup: 'Tríceps',
         restTimeSeconds: 60,
         sets: [
-          { id: 's13', type: 'warmup', targetReps: 12, unit: 'placas', restTimeSeconds: 45, completed: false },
-          { id: 's14', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
-          { id: 's15', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
-          { id: 's16', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 90, completed: false }
+          { id: 's13', type: 'warmup', targetReps: 10, unit: 'placas', restTimeSeconds: 60, completed: false },
+          { id: 's14', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's15', type: 'work', targetReps: 10, unit: 'placas', restTimeSeconds: 90, completed: false },
+          { id: 's16', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false }
         ]
       }
     ]

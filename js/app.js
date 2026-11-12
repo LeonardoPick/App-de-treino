@@ -41,6 +41,10 @@ class App {
         this.navigate('workout');
         return;
       }
+      // Se o usuário estiver editando uma rotina no momento, não reseta a tela de edição
+      if (this.currentScreen === 'routines' && this.screens.routines?.editingRoutine) {
+        return;
+      }
       this.screens[this.currentScreen]?.render(this.container);
     });
 

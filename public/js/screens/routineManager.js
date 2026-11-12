@@ -26,14 +26,73 @@ const DAYS_OPTIONS = [
   { value: 0, label: 'Domingo' }
 ];
 
+const DRAFT_STORAGE_KEY = 'workout_routine_edit_draft';
+
 export class RoutineManagerScreen {
   constructor(app) {
     this.app = app;
     this.editingRoutine = null;
     this.expandedExerciseIndex = 0;
+    this.activeContainer = null;
+    this.initDraftListeners();
+  }
+
+  initDraftListeners() {
+    // Salva rascunho imediatamente ao trocar de aba ou minimizar navegador
+    document.addEventListener('visibilitychange', () => {
+      if (this.editingRoutine && this.activeContainer) {
+        this.syncInputsToModel(this.activeContainer);
+        this.saveDraft();
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (this.editingRoutine && this.activeContainer) {
+        this.syncInputsToModel(this.activeContainer);
+        this.saveDraft();
+      }
+    });
+  }
+
+  saveDraft() {
+    if (this.editingRoutine) {
+      try {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
+          routine: this.editingRoutine,
+          expandedIdx: this.expandedExerciseIndex
+        }));
+      } catch (e) {}
+    }
+  }
+
+  clearDraft() {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (e) {}
+  }
+
+  loadDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (data && data.routine && Array.isArray(data.routine.exercises)) {
+        this.editingRoutine = data.routine;
+        this.expandedExerciseIndex = typeof data.expandedIdx === 'number' ? data.expandedIdx : 0;
+        return true;
+      }
+    } catch (e) {}
+    return false;
   }
 
   render(container) {
+    this.activeContainer = container;
+
+    // Se não há rotina na memória, tenta restaurar rascunho em andamento
+    if (!this.editingRoutine) {
+      this.loadDraft();
+    }
+
     if (this.editingRoutine) {
       this.renderEditor(container);
     } else {
@@ -132,6 +191,7 @@ export class RoutineManagerScreen {
 
   bindListEvents(container) {
     container.querySelector('#btn-new-routine')?.addEventListener('click', () => {
+      this.clearDraft();
       this.expandedExerciseIndex = 0;
       this.editingRoutine = {
         id: generateId('routine'),
@@ -144,15 +204,16 @@ export class RoutineManagerScreen {
             muscleGroup: 'Peito',
             restTimeSeconds: 90,
             sets: [
-              { id: generateId('s'), type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 60, completed: false },
-              { id: generateId('s'), type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 90, completed: false },
-              { id: generateId('s'), type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-              { id: generateId('s'), type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-              { id: generateId('s'), type: 'top', targetReps: 6, unit: 'kg', restTimeSeconds: 180, completed: false }
+              { id: generateId('s'), type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+              { id: generateId('s'), type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+              { id: generateId('s'), type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+              { id: generateId('s'), type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+              { id: generateId('s'), type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
             ]
           }
         ]
       };
+      this.saveDraft();
       this.render(container);
     });
 
@@ -161,8 +222,10 @@ export class RoutineManagerScreen {
         const id = btn.getAttribute('data-edit-routine');
         const routine = storageService.getRoutineById(id);
         if (routine) {
+          this.clearDraft();
           this.expandedExerciseIndex = 0;
           this.editingRoutine = JSON.parse(JSON.stringify(routine));
+          this.saveDraft();
           this.render(container);
         }
       });
@@ -251,8 +314,8 @@ export class RoutineManagerScreen {
             ${routine.exercises.map((ex, exIndex) => {
               const isExpanded = this.expandedExerciseIndex === exIndex;
               return isExpanded
-                ? this.renderExpandedExerciseCard(ex, exIndex)
-                : this.renderCollapsedExerciseCard(ex, exIndex);
+                ? this.renderExpandedExerciseCard(ex, exIndex, routine.exercises.length)
+                : this.renderCollapsedExerciseCard(ex, exIndex, routine.exercises.length);
             }).join('')}
           </div>
         </div>
@@ -263,7 +326,7 @@ export class RoutineManagerScreen {
     this.bindEditorEvents(container);
   }
 
-  renderCollapsedExerciseCard(exercise, exIndex) {
+  renderCollapsedExerciseCard(exercise, exIndex, totalExercises) {
     exercise.sets = sortSetsByCategory(exercise.sets);
     const counts = {
       warmup: exercise.sets.filter(s => s.type === 'warmup').length,
@@ -275,18 +338,42 @@ export class RoutineManagerScreen {
 
     return `
       <div 
-        class="apple-card p-4 exercise-accordion-summary" 
+        class="apple-card p-3.5 sm:p-4 exercise-accordion-summary" 
         data-expand-exercise="${exIndex}"
-        title="Toque para editar os detalhes"
+        title="Toque para abrir e editar os detalhes"
       >
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 flex-shrink-0">
+        <div class="flex items-center justify-between gap-2.5">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <!-- Botões de Reordenar (Subir / Descer) -->
+            <div class="flex flex-col gap-1 flex-shrink-0" onclick="event.stopPropagation()">
+              <button 
+                type="button" 
+                class="order-btn ${exIndex === 0 ? 'disabled' : ''}" 
+                data-move-exercise="${exIndex}" 
+                data-direction="up" 
+                title="Mover exercício para cima"
+                ${exIndex === 0 ? 'disabled' : ''}
+              >
+                ${icons.arrowUp}
+              </button>
+              <button 
+                type="button" 
+                class="order-btn ${exIndex === totalExercises - 1 ? 'disabled' : ''}" 
+                data-move-exercise="${exIndex}" 
+                data-direction="down" 
+                title="Mover exercício para baixo"
+                ${exIndex === totalExercises - 1 ? 'disabled' : ''}
+              >
+                ${icons.arrowDown}
+              </button>
+            </div>
+
+            <span class="text-xs font-mono font-semibold px-2 py-1 rounded-lg bg-zinc-800 text-zinc-300 flex-shrink-0">
               #${exIndex + 1}
             </span>
             <div class="min-w-0">
               <h4 class="text-sm font-semibold text-white truncate">${exercise.name || 'Novo Exercício'}</h4>
-              <p class="text-[11px] text-zinc-400 mt-0.5">
+              <p class="text-[11px] text-zinc-400 mt-0.5 truncate">
                 ${exercise.muscleGroup || 'Geral'} • ${totalSets} ${totalSets === 1 ? 'série' : 'séries'}
               </p>
             </div>
@@ -320,7 +407,7 @@ export class RoutineManagerScreen {
     `;
   }
 
-  renderExpandedExerciseCard(exercise, exIndex) {
+  renderExpandedExerciseCard(exercise, exIndex, totalExercises) {
     // Mantém as séries sempre ordenadas: Aquecimento -> Feeder -> Work -> Top
     exercise.sets = sortSetsByCategory(exercise.sets);
 
@@ -330,8 +417,31 @@ export class RoutineManagerScreen {
         data-exercise-index="${exIndex}"
       >
         <!-- Barra Superior do Exercício Aberto -->
-        <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div class="flex items-center justify-between pb-3 border-b border-zinc-800 flex-wrap gap-2">
           <div class="flex items-center gap-2">
+            <!-- Botões de Reordenar (Subir / Descer) -->
+            <div class="flex items-center gap-1">
+              <button 
+                type="button" 
+                class="order-btn ${exIndex === 0 ? 'disabled' : ''}" 
+                data-move-exercise="${exIndex}" 
+                data-direction="up" 
+                title="Mover exercício para cima"
+                ${exIndex === 0 ? 'disabled' : ''}
+              >
+                ${icons.arrowUp}
+              </button>
+              <button 
+                type="button" 
+                class="order-btn ${exIndex === totalExercises - 1 ? 'disabled' : ''}" 
+                data-move-exercise="${exIndex}" 
+                data-direction="down" 
+                title="Mover exercício para baixo"
+                ${exIndex === totalExercises - 1 ? 'disabled' : ''}
+              >
+                ${icons.arrowDown}
+              </button>
+            </div>
             <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-400">
               #${exIndex + 1}
             </span>
@@ -545,15 +655,30 @@ export class RoutineManagerScreen {
   bindEditorEvents(container) {
     const routine = this.editingRoutine;
 
+    // Monitora qualquer alteração em inputs e selects para sincronizar e salvar rascunho em tempo real
+    container.querySelectorAll('input, select').forEach(elem => {
+      elem.addEventListener('input', () => {
+        this.syncInputsToModel(container);
+        this.saveDraft();
+      });
+      elem.addEventListener('change', () => {
+        this.syncInputsToModel(container);
+        this.saveDraft();
+      });
+    });
+
     container.querySelector('#routine-name-input')?.addEventListener('input', (e) => {
       routine.name = e.target.value;
+      this.saveDraft();
     });
 
     container.querySelector('#routine-day-select')?.addEventListener('change', (e) => {
       routine.dayOfWeek = parseInt(e.target.value, 10);
+      this.saveDraft();
     });
 
     container.querySelector('#btn-cancel-edit')?.addEventListener('click', () => {
+      this.clearDraft();
       this.editingRoutine = null;
       this.render(container);
     });
@@ -569,8 +694,41 @@ export class RoutineManagerScreen {
         return;
       }
       storageService.saveRoutine(routine);
+      this.clearDraft();
       this.editingRoutine = null;
       this.render(container);
+    });
+
+    // Reordenar Exercícios (Subir / Descer)
+    container.querySelectorAll('[data-move-exercise]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.syncInputsToModel(container);
+        const exIdx = parseInt(btn.getAttribute('data-move-exercise'), 10);
+        const dir = btn.getAttribute('data-direction');
+
+        if (dir === 'up' && exIdx > 0) {
+          const temp = routine.exercises[exIdx];
+          routine.exercises[exIdx] = routine.exercises[exIdx - 1];
+          routine.exercises[exIdx - 1] = temp;
+          if (this.expandedExerciseIndex === exIdx) {
+            this.expandedExerciseIndex = exIdx - 1;
+          } else if (this.expandedExerciseIndex === exIdx - 1) {
+            this.expandedExerciseIndex = exIdx;
+          }
+        } else if (dir === 'down' && exIdx < routine.exercises.length - 1) {
+          const temp = routine.exercises[exIdx];
+          routine.exercises[exIdx] = routine.exercises[exIdx + 1];
+          routine.exercises[exIdx + 1] = temp;
+          if (this.expandedExerciseIndex === exIdx) {
+            this.expandedExerciseIndex = exIdx + 1;
+          } else if (this.expandedExerciseIndex === exIdx + 1) {
+            this.expandedExerciseIndex = exIdx;
+          }
+        }
+        this.saveDraft();
+        this.render(container);
+      });
     });
 
     // Expandir exercício ao clicar no resumo
@@ -579,6 +737,7 @@ export class RoutineManagerScreen {
         this.syncInputsToModel(container);
         const exIdx = parseInt(card.getAttribute('data-expand-exercise'), 10);
         this.expandedExerciseIndex = exIdx;
+        this.saveDraft();
         this.render(container);
       });
     });
@@ -589,6 +748,7 @@ export class RoutineManagerScreen {
         e.stopPropagation();
         this.syncInputsToModel(container);
         this.expandedExerciseIndex = null;
+        this.saveDraft();
         this.render(container);
       });
     });
@@ -601,14 +761,15 @@ export class RoutineManagerScreen {
         muscleGroup: 'Geral',
         restTimeSeconds: 90,
         sets: [
-          { id: generateId('s'), type: 'warmup', targetReps: 12, unit: 'kg', restTimeSeconds: 60, completed: false },
-          { id: generateId('s'), type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: generateId('s'), type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: generateId('s'), type: 'top', targetReps: 6, unit: 'kg', restTimeSeconds: 180, completed: false }
+          { id: generateId('s'), type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: generateId('s'), type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
+          { id: generateId('s'), type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
+          { id: generateId('s'), type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false }
         ]
       });
       // Abre automaticamente o novo exercício adicionado
       this.expandedExerciseIndex = routine.exercises.length - 1;
+      this.saveDraft();
       this.render(container);
     });
 
@@ -623,6 +784,7 @@ export class RoutineManagerScreen {
         } else if (this.expandedExerciseIndex > exIdx) {
           this.expandedExerciseIndex--;
         }
+        this.saveDraft();
         this.render(container);
       });
     });
@@ -647,7 +809,7 @@ export class RoutineManagerScreen {
           ex.sets.push({
             id: generateId('s'),
             type,
-            targetReps: DEFAULT_SET_TARGET_REPS[type] || 8,
+            targetReps: DEFAULT_SET_TARGET_REPS[type] || 10,
             unit: existingUnit,
             restTimeSeconds: categoryRest,
             completed: false
@@ -661,6 +823,7 @@ export class RoutineManagerScreen {
             }
           }
         }
+        this.saveDraft();
         this.render(container);
       });
     });
@@ -679,6 +842,7 @@ export class RoutineManagerScreen {
               s.restTimeSeconds = newRest;
             }
           });
+          this.saveDraft();
           this.render(container);
         }
       });
@@ -692,6 +856,7 @@ export class RoutineManagerScreen {
         const exIdx = parseInt(btn.getAttribute('data-ex-idx'), 10);
         const sIdx = parseInt(btn.getAttribute('data-remove-set'), 10);
         routine.exercises[exIdx].sets.splice(sIdx, 1);
+        this.saveDraft();
         this.render(container);
       });
     });
