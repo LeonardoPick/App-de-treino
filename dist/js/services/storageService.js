@@ -708,9 +708,45 @@ class StorageService {
    * Restaura o plano oficial do Personal Trainer (Treinos A ao F de Segunda a Sábado)
    */
   async restoreOfficialPlan() {
-    this.memoryCache.routines = DEFAULT_ROUTINES.map(r => this.normalizeRoutineSets(r));
+    const previousIds = this.memoryCache.routines.map(r => r.id);
+    const officialRoutines = DEFAULT_ROUTINES.map(r => this.normalizeRoutineSets(r));
+    const officialIds = new Set(officialRoutines.map(r => r.id));
+
+    this.memoryCache.routines = officialRoutines;
     await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
     localStorage.setItem('workout_routines_version_erick_v1', 'erick_personal_v1');
+    localStorage.setItem('workout_routines_erick_cloud_migrated_v1', '1');
+
+    const isOnlineAuth = supabaseService.client && supabaseService.user && navigator.onLine;
+    if (isOnlineAuth) {
+      this.setSyncStatus('syncing');
+      try {
+        for (const oldId of previousIds) {
+          if (!officialIds.has(oldId)) {
+            await this.executeRemoteOperation({ table: 'routines', action: 'delete', id: oldId });
+          }
+        }
+        for (const routine of this.memoryCache.routines) {
+          await this.executeRemoteOperation({ table: 'routines', action: 'upsert', payload: routine });
+        }
+        this.setSyncStatus('synced');
+      } catch (e) {
+        for (const routine of this.memoryCache.routines) {
+          await this.enqueueCloudOperation({ table: 'routines', action: 'upsert', payload: routine });
+        }
+        this.setSyncStatus('offline-cache');
+      }
+    } else {
+      for (const oldId of previousIds) {
+        if (!officialIds.has(oldId)) {
+          await this.enqueueCloudOperation({ table: 'routines', action: 'delete', id: oldId });
+        }
+      }
+      for (const routine of this.memoryCache.routines) {
+        await this.enqueueCloudOperation({ table: 'routines', action: 'upsert', payload: routine });
+      }
+    }
+
     window.dispatchEvent(new CustomEvent('storage-synced'));
     window.dispatchEvent(new CustomEvent('workout-data-saved'));
     return this.memoryCache.routines;
@@ -807,7 +843,13 @@ class StorageService {
         .order('day_of_week', { ascending: true });
 
       if (!errRoutines && Array.isArray(remoteRoutines)) {
-        if (remoteRoutines.length > 0) {
+        const officialIds = new Set(DEFAULT_ROUTINES.map(r => r.id));
+        const oldSeedIds = new Set(['routine_peito_triceps', 'routine_costas_biceps', 'routine_pernas']);
+        const hasOfficialInRemote = remoteRoutines.some(r => officialIds.has(r.id));
+        const hasOldSeedInRemote = remoteRoutines.some(r => oldSeedIds.has(r.id));
+        const cloudMigrated = localStorage.getItem('workout_routines_erick_cloud_migrated_v1') === '1';
+
+        if (remoteRoutines.length > 0 && (hasOfficialInRemote || (cloudMigrated && !hasOldSeedInRemote))) {
           this.memoryCache.routines = remoteRoutines.map(row => this.normalizeRoutineSets({
             id: row.id,
             name: row.name,
@@ -815,11 +857,24 @@ class StorageService {
             exercises: row.exercises || []
           }));
           await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
+          localStorage.setItem('workout_routines_erick_cloud_migrated_v1', '1');
         } else {
-          // Se a conta no Supabase for nova, faz o upload inicial das rotinas atuais do cache para a nuvem
+          // Conta nova ou com fichas antigas do seed: migra para as rotinas oficiais A-F e envia para a nuvem
+          for (const row of remoteRoutines) {
+            if (oldSeedIds.has(row.id)) {
+              await this.executeRemoteOperation({ table: 'routines', action: 'delete', id: row.id });
+            }
+          }
+
+          if (!this.memoryCache.routines.some(r => officialIds.has(r.id))) {
+            this.memoryCache.routines = DEFAULT_ROUTINES.map(r => this.normalizeRoutineSets(r));
+          }
+
           for (const routine of this.memoryCache.routines) {
             await this.executeRemoteOperation({ table: 'routines', action: 'upsert', payload: routine });
           }
+          await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
+          localStorage.setItem('workout_routines_erick_cloud_migrated_v1', '1');
         }
       }
 
