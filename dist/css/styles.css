@@ -518,6 +518,21 @@ body.apple-body {
   color: #BF5AF2;
   font-weight: 600;
 }
+.badge-backoff {
+  background-color: rgba(255, 55, 95, 0.16);
+  color: #FF375F;
+  font-weight: 600;
+}
+.badge-rest_pause {
+  background-color: rgba(255, 214, 10, 0.16);
+  color: #FFD60A;
+  font-weight: 600;
+}
+.badge-cluster {
+  background-color: rgba(0, 199, 190, 0.16);
+  color: #00C7BE;
+  font-weight: 600;
+}
 
 .rs-badge-green, .apple-badge-green {
   background-color: rgba(48, 209, 88, 0.14);

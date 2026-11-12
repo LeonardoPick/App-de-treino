@@ -38,7 +38,7 @@ const DEFAULT_ROUTINES = [
           { id: 's_a1_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
           { id: 's_a1_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
           { id: 's_a1_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 's_a1_5', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 20, completed: false } // Back Off Set 20s
+          { id: 's_a1_5', type: 'backoff', targetReps: 8, unit: 'kg', restTimeSeconds: 20, completed: false }
         ]
       },
       {
@@ -86,7 +86,8 @@ const DEFAULT_ROUTINES = [
           { id: 's_a5_1', type: 'warmup', targetReps: 10, unit: 'kg', restTimeSeconds: 60, completed: false },
           { id: 's_a5_2', type: 'feeder', targetReps: 6, unit: 'kg', restTimeSeconds: 60, completed: false },
           { id: 's_a5_3', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
-          { id: 's_a5_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false } // + Rest Pause 30s
+          { id: 's_a5_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
+          { id: 's_a5_5', type: 'rest_pause', targetReps: 6, unit: 'kg', restTimeSeconds: 30, completed: false }
         ]
       },
       {
@@ -133,7 +134,7 @@ const DEFAULT_ROUTINES = [
           { id: 's_b2_2', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
           { id: 's_b2_3', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 90, completed: false },
           { id: 's_b2_4', type: 'top', targetReps: 6, unit: 'placas', restTimeSeconds: 120, completed: false },
-          { id: 's_b2_5', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 20, completed: false } // Back Off Set 20s
+          { id: 's_b2_5', type: 'backoff', targetReps: 8, unit: 'placas', restTimeSeconds: 20, completed: false }
         ]
       },
       {
@@ -157,7 +158,7 @@ const DEFAULT_ROUTINES = [
           { id: 's_b4_2', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
           { id: 's_b4_3', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
           { id: 's_b4_4', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 's_b4_5', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 20, completed: false } // Back Off Set 20s
+          { id: 's_b4_5', type: 'backoff', targetReps: 10, unit: 'kg', restTimeSeconds: 20, completed: false }
         ]
       },
       {
@@ -393,7 +394,7 @@ const DEFAULT_ROUTINES = [
           { id: 's_e4_1', type: 'feeder', targetReps: 8, unit: 'kg', restTimeSeconds: 60, completed: false },
           { id: 's_e4_2', type: 'work', targetReps: 8, unit: 'kg', restTimeSeconds: 90, completed: false },
           { id: 's_e4_3', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 's_e4_4', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 30, completed: false } // Back Off Set 30s
+          { id: 's_e4_4', type: 'backoff', targetReps: 10, unit: 'kg', restTimeSeconds: 30, completed: false }
         ]
       },
       {
@@ -451,7 +452,7 @@ const DEFAULT_ROUTINES = [
           { id: 's_f3_1', type: 'feeder', targetReps: 8, unit: 'kg', restTimeSeconds: 60, completed: false },
           { id: 's_f3_2', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 90, completed: false },
           { id: 's_f3_3', type: 'top', targetReps: 8, unit: 'kg', restTimeSeconds: 120, completed: false },
-          { id: 's_f3_4', type: 'work', targetReps: 10, unit: 'kg', restTimeSeconds: 30, completed: false } // Back Off Set 30s
+          { id: 's_f3_4', type: 'backoff', targetReps: 10, unit: 'kg', restTimeSeconds: 30, completed: false }
         ]
       },
       {
@@ -485,7 +486,7 @@ const DEFAULT_ROUTINES = [
           { id: 's_f6_1', type: 'feeder', targetReps: 6, unit: 'placas', restTimeSeconds: 60, completed: false },
           { id: 's_f6_2', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 90, completed: false },
           { id: 's_f6_3', type: 'top', targetReps: 8, unit: 'placas', restTimeSeconds: 120, completed: false },
-          { id: 's_f6_4', type: 'work', targetReps: 8, unit: 'placas', restTimeSeconds: 20, completed: false } // Back Off Set 20s
+          { id: 's_f6_4', type: 'backoff', targetReps: 8, unit: 'placas', restTimeSeconds: 20, completed: false }
         ]
       }
     ]
@@ -677,11 +678,11 @@ class StorageService {
     const routineVersion = localStorage.getItem('workout_routines_version_erick_v1');
     const isOldSeed = Array.isArray(cachedRoutines) && cachedRoutines.some(r => r.id === 'routine_peito_triceps');
 
-    // Se o usuário ainda não migrou para as fichas de A ao F ou tem o seed antigo, atualiza automaticamente
-    if (routineVersion !== 'erick_personal_v1' || isOldSeed || !Array.isArray(cachedRoutines) || cachedRoutines.length === 0) {
+    // Se o usuário ainda não migrou para as fichas de A ao F (v2 com Back Off / Rest Pause) ou tem o seed antigo, atualiza automaticamente
+    if (routineVersion !== 'erick_personal_v2' || isOldSeed || !Array.isArray(cachedRoutines) || cachedRoutines.length === 0) {
       this.memoryCache.routines = DEFAULT_ROUTINES.map(r => this.normalizeRoutineSets(r));
       await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
-      localStorage.setItem('workout_routines_version_erick_v1', 'erick_personal_v1');
+      localStorage.setItem('workout_routines_version_erick_v1', 'erick_personal_v2');
     } else {
       this.memoryCache.routines = cachedRoutines.map(r => this.normalizeRoutineSets(r));
     }
@@ -714,8 +715,8 @@ class StorageService {
 
     this.memoryCache.routines = officialRoutines;
     await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
-    localStorage.setItem('workout_routines_version_erick_v1', 'erick_personal_v1');
-    localStorage.setItem('workout_routines_erick_cloud_migrated_v1', '1');
+    localStorage.setItem('workout_routines_version_erick_v1', 'erick_personal_v2');
+    localStorage.setItem('workout_routines_erick_cloud_migrated_v2', '1');
 
     const isOnlineAuth = supabaseService.client && supabaseService.user && navigator.onLine;
     if (isOnlineAuth) {
@@ -847,9 +848,9 @@ class StorageService {
         const oldSeedIds = new Set(['routine_peito_triceps', 'routine_costas_biceps', 'routine_pernas']);
         const hasOfficialInRemote = remoteRoutines.some(r => officialIds.has(r.id));
         const hasOldSeedInRemote = remoteRoutines.some(r => oldSeedIds.has(r.id));
-        const cloudMigrated = localStorage.getItem('workout_routines_erick_cloud_migrated_v1') === '1';
+        const cloudMigrated = localStorage.getItem('workout_routines_erick_cloud_migrated_v2') === '1';
 
-        if (remoteRoutines.length > 0 && (hasOfficialInRemote || (cloudMigrated && !hasOldSeedInRemote))) {
+        if (remoteRoutines.length > 0 && (cloudMigrated && !hasOldSeedInRemote)) {
           this.memoryCache.routines = remoteRoutines.map(row => this.normalizeRoutineSets({
             id: row.id,
             name: row.name,
@@ -857,16 +858,16 @@ class StorageService {
             exercises: row.exercises || []
           }));
           await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
-          localStorage.setItem('workout_routines_erick_cloud_migrated_v1', '1');
+          localStorage.setItem('workout_routines_erick_cloud_migrated_v2', '1');
         } else {
-          // Conta nova ou com fichas antigas do seed: migra para as rotinas oficiais A-F e envia para a nuvem
+          // Conta nova ou ainda não migrada para v2 (com Back Off / Rest Pause): atualiza na nuvem
           for (const row of remoteRoutines) {
             if (oldSeedIds.has(row.id)) {
               await this.executeRemoteOperation({ table: 'routines', action: 'delete', id: row.id });
             }
           }
 
-          if (!this.memoryCache.routines.some(r => officialIds.has(r.id))) {
+          if (!hasOfficialInRemote || !cloudMigrated) {
             this.memoryCache.routines = DEFAULT_ROUTINES.map(r => this.normalizeRoutineSets(r));
           }
 
@@ -874,7 +875,7 @@ class StorageService {
             await this.executeRemoteOperation({ table: 'routines', action: 'upsert', payload: routine });
           }
           await this.idbPut(STORE_CACHE, CACHE_KEYS.ROUTINES, this.memoryCache.routines);
-          localStorage.setItem('workout_routines_erick_cloud_migrated_v1', '1');
+          localStorage.setItem('workout_routines_erick_cloud_migrated_v2', '1');
         }
       }
 

@@ -6,6 +6,7 @@
 
 import { storageService } from '../services/storageService.js';
 import { icons } from '../components/icons.js';
+import { SET_TYPES_ORDER, SET_TYPE_SHORT_LABELS } from '../models.js';
 
 const DAYS_OF_WEEK = [
   { dayIndex: 1, label: 'S', fullLabel: 'Seg', name: 'Segunda-feira' },
@@ -135,19 +136,17 @@ export class DashboardScreen {
         <!-- Lista Limpa de Exercícios e Quantidade de Cada Série -->
         <div class="space-y-1.5 pt-2 border-t border-zinc-800">
           ${routine.exercises.map((ex, idx) => {
-            const wCount = ex.sets.filter(s => s.type === 'warmup').length;
-            const fCount = ex.sets.filter(s => s.type === 'feeder').length;
-            const wkCount = ex.sets.filter(s => s.type === 'work').length;
-            const tCount = ex.sets.filter(s => s.type === 'top').length;
+            const badges = SET_TYPES_ORDER.map(type => {
+              const count = ex.sets.filter(s => s.type === type).length;
+              if (!count) return '';
+              return `<span class="badge-${type} text-[10px] px-2 py-0.5 rounded-full">${count} ${SET_TYPE_SHORT_LABELS[type]}</span>`;
+            }).join('');
 
             return `
-              <div class="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-zinc-950/70">
+              <div class="flex items-center justify-between gap-2 text-xs py-2 px-3 rounded-xl bg-zinc-950/70">
                 <span class="text-zinc-200 font-medium truncate pr-2">${idx + 1}. ${ex.name}</span>
-                <div class="flex items-center gap-1 flex-shrink-0">
-                  ${wCount ? `<span class="badge-warmup text-[10px] px-2 py-0.5 rounded-full">${wCount} Aquec</span>` : ''}
-                  ${fCount ? `<span class="badge-feeder text-[10px] px-2 py-0.5 rounded-full">${fCount} Feeder</span>` : ''}
-                  ${wkCount ? `<span class="badge-work text-[10px] px-2 py-0.5 rounded-full">${wkCount} Work</span>` : ''}
-                  ${tCount ? `<span class="badge-top text-[10px] px-2 py-0.5 rounded-full">${tCount} Top</span>` : ''}
+                <div class="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
+                  ${badges}
                 </div>
               </div>
             `;

@@ -15,6 +15,7 @@ import {
   SET_TYPE_LABELS,
   DEFAULT_SET_REST_SECONDS,
   DEFAULT_SET_TARGET_REPS,
+  isTechniqueSetType,
   sortSetsByCategory,
   generateId
 } from '../models.js';
@@ -269,6 +270,9 @@ export class LiveWorkoutScreen {
               <button type="button" data-live-add-set="feeder" class="badge-feeder text-[11px] px-2.5 py-1 rounded-full">+ Feeder</button>
               <button type="button" data-live-add-set="work" class="badge-work text-[11px] px-2.5 py-1 rounded-full">+ Work</button>
               <button type="button" data-live-add-set="top" class="badge-top text-[11px] px-2.5 py-1 rounded-full">+ Top Set</button>
+              <button type="button" data-live-add-set="backoff" class="badge-backoff text-[11px] px-2.5 py-1 rounded-full">+ Back Off</button>
+              <button type="button" data-live-add-set="rest_pause" class="badge-rest_pause text-[11px] px-2.5 py-1 rounded-full">+ Rest Pause</button>
+              <button type="button" data-live-add-set="cluster" class="badge-cluster text-[11px] px-2.5 py-1 rounded-full">+ Cluster</button>
             </div>
           </div>
         </section>
@@ -690,10 +694,16 @@ export class LiveWorkoutScreen {
         // Garante que a tela não bloqueie durante o descanso via Wake Lock API
         this.requestWakeLock();
 
-        // Inicia o cronômetro com o tempo específico desta série
-        timerService.start(specificRest);
-
         const nextSetIdx = currentEx.sets.findIndex(s => !s.completed && !s.skipped);
+        const nextSet = nextSetIdx !== -1 ? currentEx.sets[nextSetIdx] : null;
+
+        // Se a próxima série for um complemento (Back Off, Rest Pause, Cluster), usa o descanso curto dela
+        const restToStart = (nextSet && isTechniqueSetType(nextSet.type))
+          ? (nextSet.restTimeSeconds || DEFAULT_SET_REST_SECONDS[nextSet.type] || 30)
+          : specificRest;
+
+        timerService.start(restToStart);
+
         if (nextSetIdx === -1 && this.activeExerciseIndex < this.workoutState.exercises.length - 1) {
           this.activeExerciseIndex++;
         }

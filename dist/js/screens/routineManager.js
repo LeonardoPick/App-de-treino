@@ -10,7 +10,10 @@ import { icons } from '../components/icons.js';
 import {
   generateId,
   SET_TYPES_ORDER,
+  BASE_SET_TYPES_ORDER,
+  TECHNIQUE_SET_TYPES_ORDER,
   SET_TYPE_LABELS,
+  SET_TYPE_SHORT_LABELS,
   DEFAULT_SET_REST_SECONDS,
   DEFAULT_SET_TARGET_REPS,
   sortSetsByCategory
@@ -165,28 +168,17 @@ export class RoutineManagerScreen {
                 </div>
 
                 <div class="space-y-1.5 pt-3 border-t border-zinc-800">
-                  ${routine.exercises.map(ex => {
-                    const counts = {
-                      warmup: ex.sets.filter(s => s.type === 'warmup').length,
-                      feeder: ex.sets.filter(s => s.type === 'feeder').length,
-                      work: ex.sets.filter(s => s.type === 'work').length,
-                      top: ex.sets.filter(s => s.type === 'top').length
-                    };
-                    return `
-                      <div class="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-zinc-950/70">
-                        <div>
-                          <span class="font-medium text-white">${ex.name}</span>
-                          <span class="text-zinc-500 ml-1">(${ex.muscleGroup})</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                          ${counts.warmup ? `<span class="badge-warmup text-[10px] px-2 py-0.5 rounded-full">${counts.warmup} Aquec</span>` : ''}
-                          ${counts.feeder ? `<span class="badge-feeder text-[10px] px-2 py-0.5 rounded-full">${counts.feeder} Feeder</span>` : ''}
-                          ${counts.work ? `<span class="badge-work text-[10px] px-2 py-0.5 rounded-full">${counts.work} Work</span>` : ''}
-                          ${counts.top ? `<span class="badge-top text-[10px] px-2 py-0.5 rounded-full">${counts.top} Top</span>` : ''}
-                        </div>
+                  ${routine.exercises.map(ex => `
+                    <div class="flex items-center justify-between gap-2 text-xs py-2 px-3 rounded-xl bg-zinc-950/70">
+                      <div class="min-w-0 truncate">
+                        <span class="font-medium text-white">${ex.name}</span>
+                        <span class="text-zinc-500 ml-1">(${ex.muscleGroup})</span>
                       </div>
-                    `;
-                  }).join('')}
+                      <div class="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
+                        ${this.renderSetBadges(ex.sets, 'text-[10px]')}
+                      </div>
+                    </div>
+                  `).join('')}
                 </div>
               </div>
             `;
@@ -347,14 +339,66 @@ export class RoutineManagerScreen {
     this.bindEditorEvents(container);
   }
 
+  renderSetBadges(sets, sizeClass = 'text-[10px]') {
+    return SET_TYPES_ORDER.map(type => {
+      const count = sets.filter(s => s.type === type).length;
+      if (!count) return '';
+      return `<span class="badge-${type} ${sizeClass} px-2 py-0.5 rounded-full font-medium">${count} ${SET_TYPE_SHORT_LABELS[type]}</span>`;
+    }).join('');
+  }
+
+  renderSetCategoryControl(exercise, exIndex, type) {
+    const setsOfType = exercise.sets.filter(s => s.type === type);
+    const count = setsOfType.length;
+    const currentTypeRest = setsOfType[0]?.restTimeSeconds || DEFAULT_SET_REST_SECONDS[type];
+    const badgeClass = `badge-${type}`;
+
+    return `
+      <div class="flex items-center justify-between p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800/80">
+        <div>
+          <span class="${badgeClass} text-xs px-2.5 py-0.5 rounded-full inline-block font-semibold">${SET_TYPE_LABELS[type]}</span>
+          <div class="flex items-center gap-1.5 mt-2">
+            <span class="text-[11px] text-zinc-400">Descanso:</span>
+            <input 
+              type="number" 
+              class="input-dark w-16 px-2 py-1 text-center text-xs font-semibold category-rest-input"
+              data-ex-idx="${exIndex}"
+              data-set-type="${type}"
+              value="${currentTypeRest}"
+              min="5"
+              max="600"
+              step="5"
+            />
+            <span class="text-[11px] text-zinc-500">seg</span>
+          </div>
+        </div>
+
+        <!-- Stepper iOS (- / Qtd / +) -->
+        <div class="apple-stepper">
+          <button 
+            type="button" 
+            class="apple-stepper-btn" 
+            data-step-type="${type}" 
+            data-step-action="remove" 
+            data-ex-idx="${exIndex}"
+            title="Retirar 1 ${SET_TYPE_LABELS[type]}"
+          >−</button>
+          <span class="apple-stepper-val">${count}</span>
+          <button 
+            type="button" 
+            class="apple-stepper-btn" 
+            data-step-type="${type}" 
+            data-step-action="add" 
+            data-ex-idx="${exIndex}"
+            title="Adicionar 1 ${SET_TYPE_LABELS[type]}"
+          >+</button>
+        </div>
+      </div>
+    `;
+  }
+
   renderCollapsedExerciseCard(exercise, exIndex, totalExercises) {
     exercise.sets = sortSetsByCategory(exercise.sets);
-    const counts = {
-      warmup: exercise.sets.filter(s => s.type === 'warmup').length,
-      feeder: exercise.sets.filter(s => s.type === 'feeder').length,
-      work: exercise.sets.filter(s => s.type === 'work').length,
-      top: exercise.sets.filter(s => s.type === 'top').length
-    };
     const totalSets = exercise.sets.length;
 
     return `
@@ -402,11 +446,8 @@ export class RoutineManagerScreen {
 
           <div class="flex items-center gap-2 flex-shrink-0">
             <!-- Badges resumidas no desktop -->
-            <div class="hidden sm:flex items-center gap-1">
-              ${counts.warmup ? `<span class="badge-warmup text-[10px] px-2 py-0.5 rounded-full font-medium">${counts.warmup} Aquec</span>` : ''}
-              ${counts.feeder ? `<span class="badge-feeder text-[10px] px-2 py-0.5 rounded-full font-medium">${counts.feeder} Feeder</span>` : ''}
-              ${counts.work ? `<span class="badge-work text-[10px] px-2 py-0.5 rounded-full font-medium">${counts.work} Work</span>` : ''}
-              ${counts.top ? `<span class="badge-top text-[10px] px-2 py-0.5 rounded-full font-medium">${counts.top} Top</span>` : ''}
+            <div class="hidden sm:flex items-center gap-1 flex-wrap justify-end">
+              ${this.renderSetBadges(exercise.sets, 'text-[10px]')}
             </div>
 
             <!-- Indicador Editar -->
@@ -419,10 +460,7 @@ export class RoutineManagerScreen {
 
         <!-- Badges para mobile -->
         <div class="flex sm:hidden items-center gap-1 mt-2.5 pt-2 border-t border-zinc-800/60 flex-wrap">
-          ${counts.warmup ? `<span class="badge-warmup text-[9px] px-2 py-0.5 rounded-full font-medium">${counts.warmup} Aquec</span>` : ''}
-          ${counts.feeder ? `<span class="badge-feeder text-[9px] px-2 py-0.5 rounded-full font-medium">${counts.feeder} Feeder</span>` : ''}
-          ${counts.work ? `<span class="badge-work text-[9px] px-2 py-0.5 rounded-full font-medium">${counts.work} Work</span>` : ''}
-          ${counts.top ? `<span class="badge-top text-[9px] px-2 py-0.5 rounded-full font-medium">${counts.top} Top</span>` : ''}
+          ${this.renderSetBadges(exercise.sets, 'text-[9px]')}
         </div>
       </div>
     `;
@@ -520,55 +558,17 @@ export class RoutineManagerScreen {
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            ${SET_TYPES_ORDER.map(type => {
-              const setsOfType = exercise.sets.filter(s => s.type === type);
-              const count = setsOfType.length;
-              const currentTypeRest = setsOfType[0]?.restTimeSeconds || DEFAULT_SET_REST_SECONDS[type];
-              const badgeClass = `badge-${type}`;
+            ${BASE_SET_TYPES_ORDER.map(type => this.renderSetCategoryControl(exercise, exIndex, type)).join('')}
+          </div>
 
-              return `
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800/80">
-                  <div>
-                    <span class="${badgeClass} text-xs px-2.5 py-0.5 rounded-full inline-block font-semibold">${SET_TYPE_LABELS[type]}</span>
-                    <div class="flex items-center gap-1.5 mt-2">
-                      <span class="text-[11px] text-zinc-400">Descanso:</span>
-                      <input 
-                        type="number" 
-                        class="input-dark w-16 px-2 py-1 text-center text-xs font-semibold category-rest-input"
-                        data-ex-idx="${exIndex}"
-                        data-set-type="${type}"
-                        value="${currentTypeRest}"
-                        min="10"
-                        max="600"
-                        step="5"
-                      />
-                      <span class="text-[11px] text-zinc-500">seg</span>
-                    </div>
-                  </div>
-
-                  <!-- Stepper iOS (- / Qtd / +) -->
-                  <div class="apple-stepper">
-                    <button 
-                      type="button" 
-                      class="apple-stepper-btn" 
-                      data-step-type="${type}" 
-                      data-step-action="remove" 
-                      data-ex-idx="${exIndex}"
-                      title="Retirar 1 ${SET_TYPE_LABELS[type]}"
-                    >−</button>
-                    <span class="apple-stepper-val">${count}</span>
-                    <button 
-                      type="button" 
-                      class="apple-stepper-btn" 
-                      data-step-type="${type}" 
-                      data-step-action="add" 
-                      data-ex-idx="${exIndex}"
-                      title="Adicionar 1 ${SET_TYPE_LABELS[type]}"
-                    >+</button>
-                  </div>
-                </div>
-              `;
-            }).join('')}
+          <div class="pt-3 border-t border-zinc-800/70 space-y-2">
+            <div class="flex items-center justify-between flex-wrap gap-1">
+              <span class="text-xs font-semibold text-zinc-300">Complemento à Última Série</span>
+              <span class="text-[11px] text-zinc-500">Back Off Set, Rest Pause ou Cluster Set</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              ${TECHNIQUE_SET_TYPES_ORDER.map(type => this.renderSetCategoryControl(exercise, exIndex, type)).join('')}
+            </div>
           </div>
         </div>
 
